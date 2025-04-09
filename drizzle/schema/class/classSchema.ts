@@ -12,7 +12,7 @@ import { event } from "../event/eventSchema"
 export const classSchema = mysqlTable("class", {
     id:int("id").primaryKey().autoincrement(),
     name: varchar("name", { length: 30 }).notNull().unique(),
-    capacity: int("capacity").notNull(),
+    capacity: int("capacity"),
     supervisorId: varchar("supervisorId",{length:36}).references(()=> teacher.id),
     gradeId: int("gradeId").notNull().references(() => grade.id),
 })
