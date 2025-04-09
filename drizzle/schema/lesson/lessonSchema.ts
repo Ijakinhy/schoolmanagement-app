@@ -4,6 +4,9 @@ import { subject } from "../subject/subjectSchema";
 import { relations } from "drizzle-orm";
 import { teacher } from "../teacher/TeacherSchema";
 import { classSchema } from "../class/classSchema";
+import { exam } from "../exam/examSchema";
+import { assignment } from "../assignment/assignmentSchema";
+import { attendance } from "../attendance/attendanceSchema";
 
 
 
@@ -12,24 +15,27 @@ export  const lesson = mysqlTable("lesson",{
     id: int("id").primaryKey().autoincrement(),
     name: varchar("name", { length: 30 }).notNull(),
     day: mysqlEnum("day", ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]).notNull(),
-    startTime: datetime("start_time").notNull(),
-    endTime: datetime("end_time").notNull(),
-    subjectId: int("subject_id").notNull().references(() => subject.id),
-    teacherId: int("teacher_id").notNull().references(() => teacher.id),
-    classId: int("class_id").notNull().references(() => classSchema.id),
+    startTime: datetime("startTime").notNull(),
+    endTime: datetime("endTime").notNull(),
+    subjectId: int("subjectId").notNull().references(() => subject.id),
+    teacherId: int("teacherId").notNull().references(() => teacher.id),
+    classId: int("classId").notNull().references(() => classSchema.id),
 })
 
-export const lessonRelations = relations(lesson, ({ one }) => ({
+export const lessonRelations = relations(lesson, ({ one,many }) => ({
     subject: one(subject, {
       fields: [lesson.subjectId],
       references: [subject.id],
     }),
     teacher: one(teacher,{
-      fields: [lesson.id],
+      fields: [lesson.teacherId],
       references: [teacher.id],
     }),
     classes: one(classSchema,{
-      fields: [lesson.id],
+      fields: [lesson.classId],
       references: [classSchema.id],
-    })
+    }),
+    exams: many(exam),
+    assignments: many(assignment),
+    attendances: many(attendance),
   }));
