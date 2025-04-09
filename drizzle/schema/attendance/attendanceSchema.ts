@@ -10,8 +10,8 @@ export  const attendance =   mysqlTable("attenance", {
     id: int("id").autoincrement().primaryKey().notNull(),
     date: datetime("date").notNull(),
     present: boolean("present").notNull(),
-    studentId: int("student_id").notNull().references(() => student.id),
-    lessonId: int("lesson_id").notNull().references(() => lesson.id),
+    studentId: int("studentId").notNull().references(() => student.id),
+    lessonId: int("lessonId").notNull().references(() => lesson.id),
 })
 
 export const AttendanceRelations =  relations(attendance, ({one})=>({

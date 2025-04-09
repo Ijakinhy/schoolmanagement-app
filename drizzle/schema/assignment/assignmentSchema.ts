@@ -1,6 +1,7 @@
 import { datetime, int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
 import { lesson } from "../lesson/lessonSchema";
 import { relations } from "drizzle-orm";
+import { result } from "../result/resultSchema";
 
 
 
@@ -12,9 +13,11 @@ export  const assignment  = mysqlTable("assignment", {
     lessonId: int("lessonId").notNull().references(() => lesson.id),
 })
 
-export const assignmentRelations = relations(assignment, ({ one }) => ({
+export const assignmentRelations = relations(assignment, ({ one,many }) => ({
     lessons: one(lesson, {
         fields: [assignment.lessonId],
         references: [lesson.id],
-    })
+
+    }),
+    result: many(result)
 }));
