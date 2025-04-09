@@ -10,6 +10,9 @@ import { parent } from '../parent/parentSchema';
 import { mysqlEnum } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 import { classSchema } from '../class/classSchema';
+import { grade } from '../grade/gradeSchema';
+import { result } from '../result/resultSchema';
+import { attendance } from '../attendance/attendanceSchema';
   
   
   export  const student =  mysqlTable(
@@ -19,19 +22,20 @@ import { classSchema } from '../class/classSchema';
         username: varchar('username', { length: 30 }).unique().notNull(),
         surname: varchar('surname', { length: 30 }).notNull(),
         name: varchar('name', { length: 30 }).notNull(),
-        email: varchar('email', { length: 30 }),
-        phone: varchar('phone', { length: 30 }),
+        email: varchar('email', { length: 30 }).unique(),
+        phone: varchar('phone', { length: 30 }).unique(),
         address: varchar('address', { length: 30 }).notNull(),
         bloodType: varchar('blood_type', { length: 30 }).notNull(),
         sex:  mysqlEnum('sex', ['male', 'female']).notNull(),
         createdAt: timestamp('created_at').defaultNow(),
-        img: varchar('img', { length: 30 }),
-        parentId: varchar("parent_id",{length:36}).references(() => parent.id),
+        image: varchar('img', { length: 30 }),
+        parentId: varchar("parent_id",{length:36}).references(() => parent.id).notNull(),
         classId: int("class_id").notNull().references(() => classSchema.id),
+        gradeId: int("grade_id").notNull().references(() => grade.id),
       }
   )
 
-export const StudentRelations = relations(student, ({ one }) => ({
+export const StudentRelations = relations(student, ({ one,many }) => ({
   parent: one(parent, {
     fields: [student.parentId],
     references: [parent.id],
@@ -39,5 +43,11 @@ export const StudentRelations = relations(student, ({ one }) => ({
   class: one(classSchema, {
     fields: [student.classId],
     references: [classSchema.id],
-  })
+  }),
+  grade: one(grade, {
+    fields: [student.gradeId],  
+    references: [grade.id],
+  }),
+  attendance:many(attendance),
+  result: many(result)
 }));

@@ -13,11 +13,11 @@ import { student } from '../student/studentSchema';
     'parent',
     {
         id: varchar('id',{length:36}).primaryKey(),
-        username: varchar('username', { length: 30 }).notNull(),
+        username: varchar('username', { length: 30 }).notNull().unique(),
         name: varchar('name', { length: 30 }).notNull(),
         surname: varchar('surname', { length: 30 }).notNull(),
-        email: varchar('email',{ length: 30 }),
-        phone: varchar('phone', { length: 30 }).notNull(),
+        email: varchar('email',{ length: 30 }).unique(),
+        phone: varchar('phone', { length: 30 }).notNull().unique(),
         address: varchar('address', { length: 30 }).notNull(),
         createdAt: timestamp('created_at').defaultNow(), 
       }
