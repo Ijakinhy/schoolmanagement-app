@@ -18,7 +18,7 @@ export  const lesson = mysqlTable("lesson",{
     startTime: datetime("startTime").notNull(),
     endTime: datetime("endTime").notNull(),
     subjectId: int("subjectId").notNull().references(() => subject.id),
-    teacherId: int("teacherId").notNull().references(() => teacher.id),
+    teacherId: varchar("teacherId",{length:36}).notNull().references(() => teacher.id),
     classId: int("classId").notNull().references(() => classSchema.id),
 })
 
@@ -39,3 +39,6 @@ export const lessonRelations = relations(lesson, ({ one,many }) => ({
     assignments: many(assignment),
     attendances: many(attendance),
   }));
+
+export type Lesson = typeof lesson.$inferSelect;
+export type InsertLesson = typeof lesson.$inferInsert;

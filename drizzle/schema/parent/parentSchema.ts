@@ -27,3 +27,6 @@ import { student } from '../student/studentSchema';
 export const ParentRelations = relations(parent, ({ many }) => ({
   students: many(student),
 }));
+
+export type Parent = typeof parent.$inferSelect;
+export type ParentInsert = typeof parent.$inferInsert;

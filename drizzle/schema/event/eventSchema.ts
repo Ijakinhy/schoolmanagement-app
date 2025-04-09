@@ -11,7 +11,7 @@ export   const event =   mysqlTable("event", {
     description: varchar("description", { length: 255 }).notNull(),
     startDate : datetime("startDate").notNull(),
     endDate : datetime("endDate").notNull(),
-    classId: int("classId").notNull().references(() => classSchema.id),
+    classId: int("classId").references(() => classSchema.id),
 })
 
 export const EventRelations = relations(event, ({ one }) => ({

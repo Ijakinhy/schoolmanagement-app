@@ -51,3 +51,8 @@ export const StudentRelations = relations(student, ({ one,many }) => ({
   attendance:many(attendance),
   result: many(result)
 }));
+
+
+
+export type Student = typeof student.$inferSelect;
+export type StudentInsert = typeof student.$inferInsert;

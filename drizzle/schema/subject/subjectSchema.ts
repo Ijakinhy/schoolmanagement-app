@@ -8,7 +8,7 @@ import { lesson } from '../lesson/lessonSchema';
 
 
 export const subject = mysqlTable('subject', {
-  id: int('id').primaryKey().autoincrement().unique(),
+  id: int('id').primaryKey().autoincrement(),
   name: varchar('name', { length: 30 }).notNull(),
 });
 
@@ -16,3 +16,7 @@ export const SubjectRelations = relations(subject, ({ many }) => ({
   teacherSubjects: many(teacherToSubject), 
   lessons: many(lesson),
 }));
+
+
+export type Subject = typeof subject.$inferSelect;
+export type NewSubject = typeof subject.$inferInsert;

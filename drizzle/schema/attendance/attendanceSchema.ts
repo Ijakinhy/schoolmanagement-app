@@ -1,16 +1,16 @@
 import { relations } from "drizzle-orm";
-import { boolean, datetime, int, mysqlTable } from "drizzle-orm/mysql-core";
+import { boolean, datetime, int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
 import { student } from "../student/studentSchema";
 import { lesson } from "../lesson/lessonSchema";
 
 
 
 
-export  const attendance =   mysqlTable("attenance", {
-    id: int("id").autoincrement().primaryKey().notNull(),
+export  const attendance =   mysqlTable("attendance", {
+    id: int("id").autoincrement().primaryKey(),
     date: datetime("date").notNull(),
     present: boolean("present").notNull(),
-    studentId: int("studentId").notNull().references(() => student.id),
+    studentId: varchar("studentId",{length:36}).notNull().references(() => student.id),
     lessonId: int("lessonId").notNull().references(() => lesson.id),
 })
 
