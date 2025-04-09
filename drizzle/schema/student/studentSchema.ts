@@ -9,6 +9,7 @@ import {
 import { parent } from '../parent/parentSchema';
 import { mysqlEnum } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
+import { classSchema } from '../class/classSchema';
   
   
   export  const student =  mysqlTable(
@@ -26,6 +27,7 @@ import { relations, sql } from 'drizzle-orm';
         createdAt: timestamp('created_at').defaultNow(),
         img: varchar('img', { length: 30 }),
         parentId: varchar("parent_id",{length:36}).references(() => parent.id),
+        classId: int("class_id").notNull().references(() => classSchema.id),
       }
   )
 
@@ -34,4 +36,8 @@ export const StudentRelations = relations(student, ({ one }) => ({
     fields: [student.parentId],
     references: [parent.id],
   }),
+  class: one(classSchema, {
+    fields: [student.classId],
+    references: [classSchema.id],
+  })
 }));
