@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { int, mysqlTable } from "drizzle-orm/mysql-core";
 import { student } from "../student/studentSchema";
+import { classSchema } from "../class/classSchema";
 
 
 
@@ -11,5 +12,6 @@ export  const grade =  mysqlTable("grade", {
 })
 
 export  const gradeRelations = relations(grade, ({ many }) => ({
-    class: many(student)
+    classes: many(classSchema),
+    students: many(student)
 }))

@@ -25,13 +25,13 @@ import { attendance } from '../attendance/attendanceSchema';
         email: varchar('email', { length: 30 }).unique(),
         phone: varchar('phone', { length: 30 }).unique(),
         address: varchar('address', { length: 30 }).notNull(),
-        bloodType: varchar('blood_type', { length: 30 }).notNull(),
+        bloodType: varchar('bloodType', { length: 30 }).notNull(),
         sex:  mysqlEnum('sex', ['male', 'female']).notNull(),
-        createdAt: timestamp('created_at').defaultNow(),
+        createdAt: timestamp('createdAt').defaultNow(),
         image: varchar('img', { length: 30 }),
-        parentId: varchar("parent_id",{length:36}).references(() => parent.id).notNull(),
-        classId: int("class_id").notNull().references(() => classSchema.id),
-        gradeId: int("grade_id").notNull().references(() => grade.id),
+        parentId: varchar("parentId",{length:36}).references(() => parent.id).notNull(),
+        classId: int("classId").notNull().references(() => classSchema.id),
+        gradeId: int("gradeId").notNull().references(() => grade.id),
       }
   )
 
