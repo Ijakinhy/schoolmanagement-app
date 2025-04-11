@@ -1,8 +1,11 @@
+import type { Subject } from './../subject/subjectSchema';
 import { mysqlTable, varchar, timestamp, mysqlEnum } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 import { teacherToSubject } from '../joins/teacherToSubject';
-import { lesson } from '../lesson/lessonSchema';
-import { classSchema } from '../class/classSchema';
+import {  lesson } from '../lesson/lessonSchema';
+import type { Lesson } from '../lesson/lessonSchema';
+import {  classSchema } from '../class/classSchema';
+import type { Class } from '../class/classSchema';
 
 
 export const teacher = mysqlTable('teacher', {
@@ -16,10 +19,25 @@ export const teacher = mysqlTable('teacher', {
   bloodType: varchar('blood_type', { length: 30 }).notNull(),
   sex: mysqlEnum('sex', ['male', 'female']).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
+  image : varchar('image', { length: 30 })
 });
 
 export const TeacherRelations = relations(teacher, ({ many }) => ({
-  teacherSubjects: many(teacherToSubject), 
+  subjects: many(teacherToSubject), 
   lessons: many(lesson),
-  supervisor: many(classSchema),
+  classes: many(classSchema),
 }));
+
+export type Teacher = typeof teacher.$inferSelect;
+export type NewTeacher = typeof teacher.$inferInsert;
+
+
+
+export type TeacherWithRelations = {
+  subjects: Array<{ subject: Subject }>;  
+  lessons: Array<Lesson>;  
+  classes: Array<Class>;  
+};
+
+// Type for the teacher with relations combined
+export type TeacherList = Teacher & TeacherWithRelations;
