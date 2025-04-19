@@ -16,7 +16,7 @@ import {
 } from "../../../../../drizzle/schema";
 import { teacher } from "../../../../../drizzle/schema";
 import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
-import { count, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, like } from "drizzle-orm";
 
 const columns = [
   {
@@ -54,11 +54,10 @@ const columns = [
   },
 ];
 
-type Teacher1 = Teacher & { subjects: Subject[] } & { lessons: Lesson[] } & {
-  supervisor: Class[];
-};
+
 type Operator = {
   inArray: typeof inArray;
+  like: typeof like
 };
 
 const renderRow = (item: TeacherList) => (
@@ -120,25 +119,31 @@ export async function TeacherListPage({
   searchParams: { [key: string]: string };
 }) {
   const { page, ...queryPerams } = searchParams;
-
+  
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
-  const buildeWhereClause = (
+  const buildWhereClause = (
     queryPerams: { [key: string]: string },
-    teacherIds: string[]
+    teacherIds: string[],
   ) => {
-    return (teacher: any, { inArray }: Operator) => {
-      if (queryPerams) {
-        for (const [key, value] of Object.entries(queryPerams)) {
-          if(value !== undefined ) {
-            switch (key) {
-              case "classId":
-                return inArray(teacher.id, teacherIds);
-            }
+    const conditions: any[] = [];
+    if (queryPerams) {
+      for (const [key, value] of Object.entries(queryPerams)) {
+        if (value !== undefined) {
+          switch (key) {
+            case "classId":
+              conditions.push(inArray(teacher.id, teacherIds));
+              break;
+            case "search":
+              conditions.push(like(teacher.name, `%${value}%`));
+              break;
+             
           }
         }
       }
-    };
+    }
+    
+    return conditions.length > 0 ? and(...conditions) : conditions[0];
   };
 
   const { teachers, total }: { teachers: TeacherList[]; total: number } =
@@ -156,7 +161,7 @@ export async function TeacherListPage({
         teacherIds = lessonTeachers.map((lesson) => lesson.teacherId);
       }
 
-      const whereClause = buildeWhereClause(queryPerams, teacherIds);
+      const whereClause = buildWhereClause(queryPerams, teacherIds);
 
       const teachers = await trx.query.teacher.findMany({
         with: {
@@ -169,37 +174,17 @@ export async function TeacherListPage({
           classes: true,
         },
         where: whereClause,
-
         limit: PAGE,
         offset: (p - 1) * PAGE,
       });
       let total = 0;
-      if (queryPerams.classId) {
-        const totalResult = await trx
-          .select({
-            count: count(),
-          })
-          .from(teacher)
-          .where(inArray(teacher.id, teacherIds));
-        total = totalResult[0]?.count ?? 0;
-      }
+
       const totalResult = await trx
         .select({
           count: count(),
         })
         .from(teacher)
-        .where(() => {
-          if (queryPerams) {
-            for (const [key, value] of Object.entries(queryPerams)) {
-              if (value !== undefined) {
-                switch (key) {
-                  case "classId":
-                    return inArray(teacher.id, teacherIds);
-                }
-              }
-            }
-          }
-        });
+        .where(whereClause);
 
       total = totalResult[0]?.count ?? 0;
 
