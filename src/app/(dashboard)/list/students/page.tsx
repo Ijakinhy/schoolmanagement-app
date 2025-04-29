@@ -3,20 +3,21 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { role, studentsData } from "@/lib/data";
+import { and, count, eq, inArray, like } from "drizzle-orm";
 import Image from "next/image";
 import Link from "next/link";
+import { type Class, ClassList, lesson, student,  type StudentList } from "../../../../../drizzle/schema";
+import { db } from "../../../../../drizzle/db";
+import { PAGE } from "@/lib/setting";
 
-type Student = {
-  id: number;
-  studentId: string;
-  name: string;
-  email?: string;
-  photo: string;
-  phone?: string;
-  grade: number;
-  class: string;
-  address: string;
+// type StudentList = Student &{class:Class}
+
+type Operator = {
+  inArray: typeof inArray;
+  like: typeof like;
+  eq: typeof eq;
 };
+
 
 const columns = [
   {
@@ -49,46 +50,148 @@ const columns = [
   },
 ];
 
-const StudentListPage = () => {
-  const renderRow = (item: Student) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <Image
-          src={item.photo}
-          alt=""
-          width={40}
-          height={40}
-          className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
-        />
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item.class}</p>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.studentId}</td>
-      <td className="hidden md:table-cell">{item.grade}</td>
-      <td className="hidden md:table-cell">{item.phone}</td>
-      <td className="hidden md:table-cell">{item.address}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          <Link href={`/list/students/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-uiSky">
-              <Image src="/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
-          {role === "admin" && (
-            // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-uiPurple">
-            //   <Image src="/delete.png" alt="" width={16} height={16} />
-            // </button>
-            <FormModal table="student" type="delete" id={item.id} />
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+const renderRow = async (student:StudentList) => (
+  <tr
+    key={student.id}
+    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+  >
+    <td className="flex items-center gap-4 p-4">
+      <Image
+        src={student.image || "/avatar.png"}
+        alt=""
+        width={40}
+        height={40}
+        className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
+      />
+      <div className="flex flex-col">
+        <h3 className="font-semibold">{student.name}</h3>
+        <p className="text-xs text-gray-500">{student.class?.name}</p>
+      </div>
+    </td>
+    <td className="hidden md:table-cell">{student.surname}</td>
+    <td className="hidden md:table-cell">{student.class?.name}</td>
+    <td className="hidden md:table-cell">{student.phone}</td>
+    <td className="hidden md:table-cell">{student.address}</td>
+    <td>
+      <div className="flex items-center gap-2">
+        <Link href={`/list/students/${student.id}`}>
+          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-uiSky">
+            <Image src="/view.png" alt="" width={16} height={16} />
+          </button>
+        </Link>
+        {role === "admin" && (
+          // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-uiPurple">
+          //   <Image src="/delete.png" alt="" width={16} height={16} />
+          // </button>
+          <FormModal table="student" type="delete" id={student.id} />
+        )}
+      </div>
+    </td>
+  </tr>
+);
+const StudentListPage =  async ({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { [key: string]: string };
+}) => {
+
+  const { page, ...queryPerams } = searchParams;
+
+  const p: number = typeof page === "string" ? parseInt(page) : 1;
+
+  const buildWhereClause = (
+    queryPerams: { [key: string]: string },
+    teacherLessonsId:string[] | []
+    
+  ) => {
+    const conditions: any[] = [];
+    if (queryPerams) {
+      for (const [key, value] of Object.entries(queryPerams)) {
+        if (value !== undefined) {
+          switch (key) {
+            case "search":
+              conditions.push(like(student.name, `%${value}%`));
+              break;
+              case "teacherId":
+                conditions.push( inArray(lesson.teacherId, teacherLessonsId),)
+
+          }
+        }
+      }
+    }
+
+    return conditions.length > 0 ? and(...conditions) : conditions[0];
+  };
+
+  const { students, total }: { students: StudentList[]; total: number } =
+    await db.transaction(async (trx) => {
+     
+      let teacherLessonsId: string[] = []
+
+      
+      
+      const studentClasses: ClassList[] = await trx.query.classSchema.findMany({
+        with:{
+          lessons: true,
+          students: true
+        }
+      })
+
+      if(queryPerams.teacherId) {
+        teacherLessonsId = studentClasses.flatMap(classItem => 
+          classItem.lessons?.filter(lesson => lesson.teacherId === queryPerams.teacherId)
+          .map(lesson => lesson.teacherId) || []
+        );
+      }
+
+
+      const whereClause = buildWhereClause(queryPerams, teacherLessonsId);
+
+      console.log(teacherLessonsId);
+      
+
+      const students = await trx.query.student.findMany({
+        with: {
+          class: {
+          with: {
+              lessons: 
+              {
+                where: whereClause,
+                with: {
+                  teacher: true,
+                },
+              }
+            },
+          },
+        },
+
+        where: whereClause,
+        limit: PAGE,
+        offset: (p - 1) * PAGE,
+      });
+      let total = 0;
+
+      const totalResult = await trx
+        .select({
+          count: count(),
+        })
+        .from(student)
+
+        .where(whereClause)
+      total = totalResult[0]?.count ?? 0;
+
+      return {
+        students: students,
+        total: total,
+      };
+
+    });
+    console.log({students},{queryPerams},{total});
+    
+
+
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -114,9 +217,9 @@ const StudentListPage = () => {
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={studentsData} />
+      <Table columns={columns} renderRow={renderRow} data={students} />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={p} count={total} />
     </div>
   );
 };
