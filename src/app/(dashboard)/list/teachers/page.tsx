@@ -2,21 +2,20 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
+import { role, teachersData } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
-import { db } from "../../../../../drizzle/db";
-import {
-  lesson,
-  type Class,
-  type Lesson,
-  type Subject,
-  type Teacher,
-  type TeacherList,
-} from "../../../../../drizzle/schema";
-import { teacher } from "../../../../../drizzle/schema";
 import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
-import { and, count, eq, inArray, like } from "drizzle-orm";
+import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
+import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+
+
+type TeacherList = Teacher & {
+  subjects:Subject[],
+  lessons:Lesson[],
+  classes:Class[]
+}
 
 const columns = [
   {
@@ -55,12 +54,8 @@ const columns = [
 ];
 
 
-type Operator = {
-  inArray: typeof inArray;
-  like: typeof like
-};
 
-const renderRow = (item: TeacherList) => (
+const renderRow = (item:TeacherList) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -83,7 +78,7 @@ const renderRow = (item: TeacherList) => (
     </td>
     <td className="hidden md:table-cell">{item.username}</td>
     <td className="hidden md:table-cell">
-      {item.subjects.map((subject) => subject.subject.name).join(",")}
+      {item.subjects.map(subject=> subject.name).join(",")}
     </td>
     <td className="hidden md:table-cell">
       {item.classes.map((className) => className.name).join(",")}
@@ -122,78 +117,53 @@ export async function TeacherListPage({
   
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
-  const buildWhereClause = (
-    queryPerams: { [key: string]: string },
-    teacherIds: string[],
-  ) => {
-    const conditions: any[] = [];
-    if (queryPerams) {
-      for (const [key, value] of Object.entries(queryPerams)) {
-        if (value !== undefined) {
-          switch (key) {
-            case "classId":
-              conditions.push(inArray(teacher.id, teacherIds));
-              break;
-            case "search":
-              conditions.push(like(teacher.name, `%${value}%`));
-              break;
-             
-          }
+  
+  // WHERE CLAUSE BASED ON  URLS PARAMS
+
+  const query: Prisma.TeacherWhereInput= {}
+
+  if(queryPerams) {
+    for (const [key,value]  of Object.entries(queryPerams)) {
+      if(value !== undefined) {
+        switch(key) {
+          case "classId":
+            query.lessons = {
+              some:{
+                classId: parseInt(value as string)
+              }
+            }
+            break
+            case "search": 
+            query.name = { contains: value }
         }
       }
+      
     }
-    
-    return conditions.length > 0 ? and(...conditions) : conditions[0];
-  };
+  }
 
-  const { teachers, total }: { teachers: TeacherList[]; total: number } =
-    await db.transaction(async (trx) => {
-      let teacherIds: string[] = [];
-      if (queryPerams.classId) {
-        const lessonTeachers = await trx.query.lesson.findMany({
-          where: (lesson, { eq }) =>
-            eq(lesson.classId, parseInt(queryPerams.classId)),
-          with: {
-            teacher: true,
-          },
-        });
+  const [teachers,count] =  await prisma.$transaction([
+      prisma.teacher.findMany({ 
+      include:{
+        classes:true,
+        subjects:true,
+        lessons:true
+      },
+      where: query,
+      take:ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE *(p-1)
+    }),
+      prisma.teacher.count({
+        where:query
+      })
 
-        teacherIds = lessonTeachers.map((lesson) => lesson.teacherId);
-      }
+  
+  ])
 
-      const whereClause = buildWhereClause(queryPerams, teacherIds);
+  
 
-      const teachers = await trx.query.teacher.findMany({
-        with: {
-          subjects: {
-            with: {
-              subject: true,
-            },
-          },
-          lessons: true,
-          classes: true,
-        },
-        where: whereClause,
-        limit: PAGE,
-        offset: (p - 1) * PAGE,
-      });
-      let total = 0;
+  
 
-      const totalResult = await trx
-        .select({
-          count: count(),
-        })
-        .from(teacher)
-        .where(whereClause);
-
-      total = totalResult[0]?.count ?? 0;
-
-      return {
-        teachers,
-        total: total,
-      };
-    });
-
+ 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -222,7 +192,8 @@ export async function TeacherListPage({
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={teachers} />
       {/* PAGINATION */}
-      <Pagination page={p} count={total} />
+      <Pagination page={p} count={count} />
+    
     </div>
   );
 }

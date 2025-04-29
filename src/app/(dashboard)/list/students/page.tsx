@@ -3,20 +3,10 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { role, studentsData } from "@/lib/data";
-import { and, count, eq, inArray, like } from "drizzle-orm";
 import Image from "next/image";
 import Link from "next/link";
-import { type Class, ClassList, lesson, student,  type StudentList } from "../../../../../drizzle/schema";
-import { db } from "../../../../../drizzle/db";
 import { PAGE } from "@/lib/setting";
 
-// type StudentList = Student &{class:Class}
-
-type Operator = {
-  inArray: typeof inArray;
-  like: typeof like;
-  eq: typeof eq;
-};
 
 
 const columns = [
@@ -50,7 +40,7 @@ const columns = [
   },
 ];
 
-const renderRow = async (student:StudentList) => (
+const renderRow = async (student:any) => (
   <tr
     key={student.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -97,98 +87,98 @@ const StudentListPage =  async ({
   searchParams: { [key: string]: string };
 }) => {
 
-  const { page, ...queryPerams } = searchParams;
+  // const { page, ...queryPerams } = searchParams;
 
-  const p: number = typeof page === "string" ? parseInt(page) : 1;
+  // const p: number = typeof page === "string" ? parseInt(page) : 1;
 
-  const buildWhereClause = (
-    queryPerams: { [key: string]: string },
-    teacherLessonsId:string[] | []
+  // const buildWhereClause = (
+  //   queryPerams: { [key: string]: string },
+  //   teacherLessonsId:string[] | []
     
-  ) => {
-    const conditions: any[] = [];
-    if (queryPerams) {
-      for (const [key, value] of Object.entries(queryPerams)) {
-        if (value !== undefined) {
-          switch (key) {
-            case "search":
-              conditions.push(like(student.name, `%${value}%`));
-              break;
-              case "teacherId":
-                conditions.push( inArray(lesson.teacherId, teacherLessonsId),)
+  // ) => {
+  //   const conditions: any[] = [];
+  //   if (queryPerams) {
+  //     for (const [key, value] of Object.entries(queryPerams)) {
+  //       if (value !== undefined) {
+  //         switch (key) {
+  //           case "search":
+  //             conditions.push(like(student.name, `%${value}%`));
+  //             break;
+  //             case "teacherId":
+  //               conditions.push( inArray(lesson.teacherId, teacherLessonsId),)
 
-          }
-        }
-      }
-    }
+  //         }
+  //       }
+  //     }
+  //   }
 
-    return conditions.length > 0 ? and(...conditions) : conditions[0];
-  };
+  //   return conditions.length > 0 ? and(...conditions) : conditions[0];
+  // };
 
-  const { students, total }: { students: StudentList[]; total: number } =
-    await db.transaction(async (trx) => {
+  // const { students, total }: { students: StudentList[]; total: number } =
+  //   await db.transaction(async (trx) => {
      
-      let teacherLessonsId: string[] = []
+  //     let teacherLessonsId: string[] = []
 
       
       
-      const studentClasses: ClassList[] = await trx.query.classSchema.findMany({
-        with:{
-          lessons: true,
-          students: true
-        }
-      })
+  //     const studentClasses: ClassList[] = await trx.query.classSchema.findMany({
+  //       with:{
+  //         lessons: true,
+  //         students: true
+  //       }
+  //     })
 
-      if(queryPerams.teacherId) {
-        teacherLessonsId = studentClasses.flatMap(classItem => 
-          classItem.lessons?.filter(lesson => lesson.teacherId === queryPerams.teacherId)
-          .map(lesson => lesson.teacherId) || []
-        );
-      }
+  //     if(queryPerams.teacherId) {
+  //       teacherLessonsId = studentClasses.flatMap(classItem => 
+  //         classItem.lessons?.filter(lesson => lesson.teacherId === queryPerams.teacherId)
+  //         .map(lesson => lesson.teacherId) || []
+  //       );
+  //     }
 
 
-      const whereClause = buildWhereClause(queryPerams, teacherLessonsId);
+  //     const whereClause = buildWhereClause(queryPerams, teacherLessonsId);
 
-      console.log(teacherLessonsId);
+  //     console.log(teacherLessonsId);
       
 
-      const students = await trx.query.student.findMany({
-        with: {
-          class: {
-          with: {
-              lessons: 
-              {
-                where: whereClause,
-                with: {
-                  teacher: true,
-                },
-              }
-            },
-          },
-        },
+  //     const students = await trx.query.student.findMany({
+  //       with: {
+  //         class: {
+  //         with: {
+  //             lessons: 
+  //             {
+  //               where: whereClause,
+  //               with: {
+  //                 teacher: true,
+  //               },
+  //             }
+  //           },
+  //         },
+  //       },
 
-        where: whereClause,
-        limit: PAGE,
-        offset: (p - 1) * PAGE,
-      });
-      let total = 0;
+  //       where: whereClause,
+  //       limit: PAGE,
+  //       offset: (p - 1) * PAGE,
+  //     });
+  //     let total = 0;
 
-      const totalResult = await trx
-        .select({
-          count: count(),
-        })
-        .from(student)
+  //     const totalResult = await trx
+  //       .select({
+  //         count: count(),
+  //       })
+  //       .from(student)
 
-        .where(whereClause)
-      total = totalResult[0]?.count ?? 0;
+  //       .where(whereClause)
+  //     total = totalResult[0]?.count ?? 0;
 
-      return {
-        students: students,
-        total: total,
-      };
+  //     return {
+  //       students: students,
+  //       total: total,
+  //     };
 
-    });
-    console.log({students},{queryPerams},{total});
+  //   });
+  //   console.log({students},{queryPerams},{total});
     
 
 
@@ -217,9 +207,9 @@ const StudentListPage =  async ({
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={students} />
-      {/* PAGINATION */}
-      <Pagination page={p} count={total} />
+      <Table columns={columns} renderRow={renderRow} data={studentsData} />
+      {/* PAGINATION
+      <Pagination page={p} count={total} /> */}
     </div>
   );
 };
