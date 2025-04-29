@@ -23,6 +23,7 @@ CREATE TABLE `Student` (
     `parentId` VARCHAR(191) NOT NULL,
     `classId` INTEGER NOT NULL,
     `gradeId` INTEGER NOT NULL,
+    `birthday` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Student_username_key`(`username`),
     UNIQUE INDEX `Student_email_key`(`email`),
@@ -60,6 +61,7 @@ CREATE TABLE `Teacher` (
     `bloodType` VARCHAR(191) NOT NULL,
     `sex` ENUM('Male', 'Famale') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `birthday` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Teacher_username_key`(`username`),
     UNIQUE INDEX `Teacher_email_key`(`email`),
@@ -113,8 +115,8 @@ CREATE TABLE `Grades` (
 CREATE TABLE `Exam` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NOT NULL,
-    `start` DATETIME(3) NOT NULL,
-    `end` DATETIME(3) NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
     `lessonId` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -146,7 +148,7 @@ CREATE TABLE `Result` (
 CREATE TABLE `Attendance` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `date` DATETIME(3) NOT NULL,
-    `present` VARCHAR(191) NOT NULL,
+    `present` BOOLEAN NOT NULL,
     `lessonId` INTEGER NOT NULL,
     `studentId` VARCHAR(191) NOT NULL,
 
@@ -170,8 +172,8 @@ CREATE TABLE `Event` (
     `title` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
     `classId` INTEGER NULL,
-    `startDate` DATETIME(3) NOT NULL,
-    `endDate` DATETIME(3) NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

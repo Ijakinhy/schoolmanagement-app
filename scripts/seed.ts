@@ -1,93 +1,31 @@
-import mysql from 'mysql2/promise';
-import { db } from "../drizzle/db.js";
-import * as schema from "../drizzle/schema/index.js"; 
-import { eq } from "drizzle-orm";
-import { drizzle } from 'drizzle-orm/mysql2';
-
-// Helper function to generate random date within a range
-function randomDate(start: Date, end: Date) {
-  return new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
-  );
-}
+import { PrismaClient, Day, UserSex } from '../src/generated/prisma/client';
+const prisma = new PrismaClient();
 
 async function main() {
- 
-
-  const connection =  mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'jakin', 
-    database: 'schoolmanagement',
-    port: 3306,  
-  });
-
- 
-  const db = drizzle(connection, { schema, mode: "default" });
-
-
-
-  // Clear existing data if needed (optional)
-  // You might want to delete data in the reverse order of dependencies
-  try {
-    console.log("Cleaning up existing data...");
-    // Delete in order of dependencies
-    await db.delete(schema.announcement);
-    await db.delete(schema.event);
-    await db.delete(schema.attendance);
-    await db.delete(schema.result);
-    await db.delete(schema.assignment);
-    await db.delete(schema.exam);
-    await db.delete(schema.lesson);
-    await db.delete(schema.student);
-    await db.delete(schema.parent);
-    await db.delete(schema.teacherToSubject);
-    await db.delete(schema.teacher);
-    await db.delete(schema.classSchema);
-    await db.delete(schema.subject);
-    await db.delete(schema.grade);
-    await db.delete(schema.admin);
-    console.log("Existing data cleared successfully.");
-  } catch (error) {
-    console.warn("Error clearing existing data:", error);
-    // Continue with seeding anyway
-  }
-
-  console.log("Starting database seeding...");
-
   // ADMIN
-  console.log("Seeding admins...");
-  await db.insert(schema.admin).values([
-    {
+  await prisma.admin.create({
+    data: {
       id: "admin1",
       username: "admin1",
     },
-    {
+  });
+  await prisma.admin.create({
+    data: {
       id: "admin2",
       username: "admin2",
     },
-  ]);
+  });
 
   // GRADE
-  console.log("Seeding grades...");
   for (let i = 1; i <= 6; i++) {
-    await db.insert(schema.grade).values({
-      level: i,
-    });
-  }
-
-  // CLASS
-  console.log("Seeding classes...");
-  for (let i = 1; i <= 6; i++) {
-    await db.insert(schema.classSchema).values({
-      name: `${i}A`,
-      gradeId: i,
-      capacity: Math.floor(Math.random() * (20 - 15 + 1)) + 15,
+    await prisma.grades.create({
+      data: {
+        level: i,
+      },
     });
   }
 
   // SUBJECT
-  console.log("Seeding subjects...");
   const subjectData = [
     { name: "Mathematics" },
     { name: "Science" },
@@ -101,215 +39,272 @@ async function main() {
     { name: "Art" },
   ];
 
-  await db.insert(schema.subject).values(subjectData);
-
-  // PARENT
-  console.log("Seeding parents...");
-  for (let i = 1; i <= 25; i++) {
-    await db.insert(schema.parent).values({
-      id: `parentId${i}`,
-      username: `parentId${i}`,
-      name: `PName ${i}`,
-      surname: `PSurname ${i}`,
-      email: `parent${i}@example.com`,
-      phone: `123-456-789${i}`,
-      address: `Address${i}`,
-      createdAt: new Date(),
-    });
+  for (const subject of subjectData) {
+    await prisma.subject.create({ data: subject });
   }
 
   // TEACHER
-  console.log("Seeding teachers...");
   for (let i = 1; i <= 15; i++) {
-    const birthday = randomDate(
-      new Date(new Date().setFullYear(new Date().getFullYear() - 60)),
-      new Date(new Date().setFullYear(new Date().getFullYear() - 30))
-    );
-
-    // First create the teacher
-    await db.insert(schema.teacher).values({
-      id: `teacher${i}`,
-      username: `teacher${i}`,
-      name: `TName${i}`,
-      surname: `TSurname${i}`,
-      email: `teacher${i}@example.com`,
-      phone: `123-456-789${i}`,
-      address: `Address${i}`,
-      bloodType: "A+",
-      sex: i % 2 === 0 ? "male" : "female",
-      createdAt: new Date(),
+    await prisma.teacher.create({
+      data: {
+        id: `teacher${i}`,
+        username: `teacher${i}`,
+        name: `Teacher ${i}`,
+        surname: `Surname ${i}`,
+        email: `teacher${i}@school.edu`,
+        phone: `123-456-${7000 + i}`,
+        address: `${i} Teacher Street, Education City`,
+        bloodType: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"][i % 8],
+        sex: i % 2 === 0 ? UserSex.Male : UserSex.Famale,
+        birthday: new Date(1970 + (i % 30), (i % 12), (i % 28) + 1),
+        subjects: { 
+          connect: [
+            { id: (i % 10) + 1 },
+            { id: ((i + 3) % 10) + 1 } // Connect to a second subject
+          ] 
+        },
+      },
     });
   }
 
-  // Set up teacher-subject relationships
-  console.log("Setting up teacher-subject relationships...");
-  for (let i = 1; i <= 15; i++) {
-    const subjectId = (i % 10) + 1;
-    await db.insert(schema.teacherToSubject).values({
-      teacherId: `teacher${i}`,
-      subjectId: subjectId,
+  // CLASS
+  for (let i = 1; i <= 6; i++) {
+    const classLetter = ["A", "B", "C"][i % 3];
+    const gradeLevel = Math.ceil(i / 3);
+    
+    await prisma.class.create({
+      data: {
+        name: `${gradeLevel}${classLetter}`,
+        gradeId: gradeLevel,
+        capacity: Math.floor(Math.random() * (30 - 20 + 1)) + 20,
+        supervisorId: `teacher${i}`,
+      },
     });
   }
 
-  // Set up teacher-class relationships
-  console.log("Setting up teacher-class relationships...");
+  // Update teachers with their class connections
   for (let i = 1; i <= 15; i++) {
-    // Optionally set one teacher as supervisor for each class
-    if (i <= 6) {
-      await db
-        .update(schema.classSchema)
-        .set({ supervisorId: `teacher${i}` })
-        .where(eq(schema.classSchema.id, 1));
-    }
+    await prisma.teacher.update({
+      where: { id: `teacher${i}` },
+      data: {
+        classes: { 
+          connect: [{ id: (i % 6) + 1 }] 
+        },
+      },
+    });
+  }
+
+  // PARENT
+  for (let i = 1; i <= 40; i++) {
+    await prisma.parent.create({
+      data: {
+        id: `parent${i}`,
+        username: `parent${i}`,
+        name: `Parent ${i}`,
+        surname: `Family ${Math.ceil(i/2)}`,
+        email: `parent${i}@example.com`,
+        phone: `987-555-${4000 + i}`,
+        address: `${Math.ceil(i/2)} Family Avenue, School District`,
+      },
+    });
   }
 
   // STUDENT
-  console.log("Seeding students...");
-  for (let i = 1; i <= 50; i++) {
-    const birthday = randomDate(
-      new Date(new Date().setFullYear(new Date().getFullYear() - 18)),
-      new Date(new Date().setFullYear(new Date().getFullYear() - 5))
-    );
-
-    await db.insert(schema.student).values({
-      id: `student${i}`,
-      username: `student${i}`,
-      name: `SName${i}`,
-      surname: `SSurname ${i}`,
-      email: `student${i}@example.com`,
-      phone: `987-654-321${i}`,
-      address: `Address${i}`,
-      bloodType: "O-",
-      sex: i % 2 === 0 ? "male" : "female",
-      parentId: `parentId${Math.ceil(i / 2) % 25 || 25}`,
-      gradeId: (i % 6) + 1,
-      classId: (i % 6) + 1,
-      createdAt: new Date(),
+  for (let i = 1; i <= 120; i++) {
+    const classId = (i % 6) + 1;
+    const gradeId = Math.ceil(classId / 3);
+    const parentIndex = Math.floor(i / 3) % 40 + 1;
+    
+    await prisma.student.create({
+      data: {
+        id: `student${i}`,
+        username: `student${i}`,
+        name: `Student ${i}`,
+        surname: `Family ${Math.ceil(parentIndex/2)}`,
+        email: `student${i}@school.edu`,
+        phone: `987-123-${1000 + i}`,
+        address: `${Math.ceil(parentIndex/2)} Family Avenue, School District`,
+        bloodType: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"][i % 8],
+        sex: i % 2 === 0 ? UserSex.Male : UserSex.Famale,
+        parentId: `parent${parentIndex}`,
+        gradeId: gradeId,
+        classId: classId,
+        birthday: new Date(2010 - (i % 6), (i % 12), (i % 28) + 1),
+      },
     });
   }
 
   // LESSON
-  console.log("Seeding lessons...");
-  const days: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday")[] = ["monday", "tuesday", "wednesday", "thursday", "friday"];
-
-  for (let i = 1; i <= 30; i++) {
-    const randomDay = days[Math.floor(Math.random() * days.length)];
-    const startHour = 8 + Math.floor(Math.random() * 8); // Classes between 8 AM and 4 PM
-
-    const startTime = new Date();
-    startTime.setHours(startHour, 0, 0, 0);
-
-    const endTime = new Date(startTime);
-    endTime.setHours(startTime.getHours() + 1); // 1 hour classes
-
-    await db.insert(schema.lesson).values({
-      name: `Lesson${i}`,
-      day: randomDay,
-      startTime: startTime,
-      endTime: endTime,
-      subjectId: (i % 10) + 1,
-      classId: (i % 6) + 1,
-      teacherId: `teacher${(i % 15) + 1}`,
+  const days = Object.values(Day);
+  for (let i = 1; i <= 60; i++) {
+    const subjectId = (i % 10) + 1;
+    const classId = (i % 6) + 1;
+    const teacherId = `teacher${(i % 15) + 1}`;
+    const dayIndex = i % days.length;
+    const startHour = 8 + Math.floor(i / 10) % 7; // Classes from 8 AM to 3 PM
+    
+    await prisma.lesson.create({
+      data: {
+        name: `${subjectData[subjectId-1].name} Class ${classId}`,
+        day: days[dayIndex],
+        start: new Date(2023, 0, 1, startHour, 0, 0), // Set hours only, date doesn't matter
+        end: new Date(2023, 0, 1, startHour + 1, 0, 0), // 1 hour lessons
+        subjectId: subjectId,
+        classId: classId,
+        teacherId: teacherId,
+      },
     });
   }
 
   // EXAM
-  console.log("Seeding exams...");
-  for (let i = 1; i <= 10; i++) {
-    const startTime = new Date();
-    startTime.setDate(startTime.getDate() + i);
-    startTime.setHours(9, 0, 0, 0);
-
-    const endTime = new Date(startTime);
-    endTime.setHours(startTime.getHours() + 2);
-
-    await db.insert(schema.exam).values({
-      title: `Exam ${i}`,
-      start: startTime,
-      end: endTime,
-      lessonId: (i % 30) + 1,
+  for (let i = 1; i <= 20; i++) {
+    const lessonId = (i % 60) + 1;
+    const examDate = new Date();
+    examDate.setDate(examDate.getDate() + (i * 2)); // Spread exams over time
+    
+    const startTime = new Date(examDate);
+    startTime.setHours(9, 0, 0);
+    
+    const endTime = new Date(examDate);
+    endTime.setHours(10, 30, 0);
+    
+    await prisma.exam.create({
+      data: {
+        title: `Exam ${i} - ${subjectData[i % 10].name}`,
+        startTime: startTime,
+        endTime: endTime,
+        lessonId: lessonId,
+      },
     });
   }
 
   // ASSIGNMENT
-  console.log("Seeding assignments...");
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 30; i++) {
+    const lessonId = (i % 60) + 1;
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() + i);
-
+    startDate.setDate(startDate.getDate());
+    
     const dueDate = new Date(startDate);
-    dueDate.setDate(dueDate.getDate() + 7); // Due in a week
-
-    await db.insert(schema.assignment).values({
-      title: `Assignment ${i}`,
-      startDate: startDate,
-      dueDate: dueDate,
-      lessonId: (i % 30) + 1,
+    dueDate.setDate(dueDate.getDate() + 7); // One week to complete assignments
+    
+    await prisma.assignment.create({
+      data: {
+        title: `Assignment ${i} - ${subjectData[i % 10].name}`,
+        startDate: startDate,
+        dueDate: dueDate,
+        lessonId: lessonId,
+      },
     });
   }
 
-  // RESULT
-  console.log("Seeding results...");
-  for (let i = 1; i <= 10; i++) {
-    await db.insert(schema.result).values({
-      score: Math.floor(Math.random() * 41) + 60, // Score between 60-100
-      studentId: `student${i}`,
-      examId: i <= 5 ? i : null,
-      assignmentId: i > 5 ? i - 5 : null,
+  // RESULT - For Exams
+  for (let i = 1; i <= 50; i++) {
+    const studentId = `student${i}`;
+    const examId = (i % 20) + 1;
+    
+    await prisma.result.create({
+      data: {
+        score: 60 + Math.floor(Math.random() * 41), // Scores between 60-100
+        studentId: studentId,
+        examId: examId,
+      },
+    });
+  }
+
+  // RESULT - For Assignments
+  for (let i = 1; i <= 50; i++) {
+    const studentId = `student${(i + 30) % 120 + 1}`;
+    const assignmentId = (i % 30) + 1;
+    
+    await prisma.result.create({
+      data: {
+        score: 70 + Math.floor(Math.random() * 31), // Scores between 70-100
+        studentId: studentId,
+        assignmentId: assignmentId,
+      },
     });
   }
 
   // ATTENDANCE
-  console.log("Seeding attendance records...");
-  for (let i = 1; i <= 10; i++) {
-    await db.insert(schema.attendance).values({
-      date: new Date(),
-      present: Math.random() > 0.2, // 80% chance of being present
-      studentId: `student${i}`,
-      lessonId: (i % 30) + 1,
+  for (let i = 1; i <= 200; i++) {
+    const studentId = `student${(i % 120) + 1}`;
+    const lessonId = (i % 60) + 1;
+    const attendanceDate = new Date();
+    attendanceDate.setDate(attendanceDate.getDate() - (i % 14)); // Last two weeks
+    
+    await prisma.attendance.create({
+      data: {
+        date: attendanceDate,
+        present: Math.random() > 0.1, // 90% chance of being present
+        studentId: studentId,
+        lessonId: lessonId,
+      },
     });
   }
 
   // EVENT
-  console.log("Seeding events...");
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 12; i++) {
+    const classId = i <= 6 ? i : null; // Some events for specific classes, some for all
     const startTime = new Date();
-    startTime.setDate(startTime.getDate() + i * 2);
-    startTime.setHours(13, 0, 0, 0);
-
+    startTime.setDate(startTime.getDate() + i * 3);
+    startTime.setHours(13, 0, 0);
+    
     const endTime = new Date(startTime);
-    endTime.setHours(startTime.getHours() + 3);
-
-    await db.insert(schema.event).values({
-      title: `Event ${i}`,
-      description: `Description for Event ${i}`,
-      startDate: startTime,
-      endDate: endTime,
-      classId: (i % 5) + 1,
+    endTime.setHours(15, 0, 0);
+    
+    const eventTypes = [
+      "Sports Day",
+      "Science Fair",
+      "Parent-Teacher Meeting",
+      "Art Exhibition",
+      "Music Concert",
+      "Field Trip",
+    ];
+    
+    await prisma.event.create({
+      data: {
+        title: `${eventTypes[i % eventTypes.length]} ${i}`,
+        description: `Join us for the ${eventTypes[i % eventTypes.length]}. All students ${classId ? `from class ${classId}` : ''} are welcome!`,
+        startTime: startTime,
+        endTime: endTime,
+        classId: classId,
+      },
     });
   }
 
   // ANNOUNCEMENT
-  console.log("Seeding announcements...");
-  for (let i = 1; i <= 5; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i); // Past announcements
-
-    await db.insert(schema.announcement).values({
-      title: `Announcement ${i}`,
-      description: `Description for Announcement ${i}`,
-      date: date,
-      classId: (i % 5) + 1,
+  for (let i = 1; i <= 15; i++) {
+    const classId = i <= 6 ? i : null; // Some announcements for specific classes, some for all
+    const announcementDate = new Date();
+    announcementDate.setDate(announcementDate.getDate() - (i % 10));
+    
+    const announcementTypes = [
+      "Schedule Change",
+      "Upcoming Test",
+      "Holiday Reminder",
+      "New School Policy",
+      "Extracurricular Activity",
+    ];
+    
+    await prisma.announcement.create({
+      data: {
+        title: `${announcementTypes[i % announcementTypes.length]} - Announcement ${i}`,
+        description: `Important notice regarding ${announcementTypes[i % announcementTypes.length].toLowerCase()}. ${classId ? `This applies to class ${classId} only.` : 'This applies to all classes.'}`,
+        date: announcementDate,
+        classId: classId,
+      },
     });
   }
 
-  console.log("Seeding completed successfully.");
-
-  // // Close the connection
-  await connection.end();
+  console.log("Database seeding completed successfully!");
 }
 
-main().catch((err) => {
-  console.error("Seeding error:", err);
-  process.exit(1);
-});
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error("Error during seeding:", e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
