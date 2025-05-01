@@ -41,11 +41,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
             );
           }
         )}
-        {/* <button className="px-2 rounded-sm bg-uiSky">1</button>
-        <button className="px-2 rounded-sm ">2</button>
-        <button className="px-2 rounded-sm ">3</button>
-        ...
-        <button className="px-2 rounded-sm ">10</button> */}
+        
       </div>
       <button
         disabled={!hasNext}

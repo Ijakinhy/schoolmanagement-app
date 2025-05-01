@@ -10,12 +10,11 @@ import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-
 type TeacherList = Teacher & {
-  subjects:Subject[],
-  lessons:Lesson[],
-  classes:Class[]
-}
+  subjects: Subject[];
+  lessons: Lesson[];
+  classes: Class[];
+};
 
 const columns = [
   {
@@ -53,9 +52,7 @@ const columns = [
   },
 ];
 
-
-
-const renderRow = (item:TeacherList) => (
+const renderRow = (item: TeacherList) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -78,7 +75,7 @@ const renderRow = (item:TeacherList) => (
     </td>
     <td className="hidden md:table-cell">{item.username}</td>
     <td className="hidden md:table-cell">
-      {item.subjects.map(subject=> subject.name).join(",")}
+      {item.subjects.map((subject) => subject.name).join(",")}
     </td>
     <td className="hidden md:table-cell">
       {item.classes.map((className) => className.name).join(",")}
@@ -106,64 +103,58 @@ const renderRow = (item:TeacherList) => (
   </tr>
 );
 
-export async function TeacherListPage({
+ const  TeacherListPage = async ({
   params,
   searchParams,
 }: {
   params: { slug: string };
   searchParams: { [key: string]: string };
-}) {
+}) => {
   const { page, ...queryPerams } = searchParams;
-  
+
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
-  
   // WHERE CLAUSE BASED ON  URLS PARAMS
 
-  const query: Prisma.TeacherWhereInput= {}
+  const query: Prisma.TeacherWhereInput = {};
 
-  if(queryPerams) {
-    for (const [key,value]  of Object.entries(queryPerams)) {
-      if(value !== undefined) {
-        switch(key) {
+  if (queryPerams) {
+    for (const [key, value] of Object.entries(queryPerams)) {
+      if (value !== undefined) {
+        switch (key) {
           case "classId":
             query.lessons = {
-              some:{
-                classId: parseInt(value as string)
-              }
-            }
-            break
-            case "search": 
-            query.name = { contains: value }
+              some: {
+                classId: parseInt(value as string),
+              },
+            };
+            break;
+          case "search":
+            query.name = { contains: value };
+            break;
+          default:
+            break;
         }
       }
-      
     }
   }
 
-  const [teachers,count] =  await prisma.$transaction([
-      prisma.teacher.findMany({ 
-      include:{
-        classes:true,
-        subjects:true,
-        lessons:true
+  const [teachers, count] = await prisma.$transaction([
+    prisma.teacher.findMany({
+      include: {
+        classes: true,
+        subjects: true,
+        lessons: true,
       },
       where: query,
-      take:ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE *(p-1)
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
     }),
-      prisma.teacher.count({
-        where:query
-      })
+    prisma.teacher.count({
+      where: query,
+    }),
+  ]);
 
-  
-  ])
-
-  
-
-  
-
- 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -193,7 +184,6 @@ export async function TeacherListPage({
       <Table columns={columns} renderRow={renderRow} data={teachers} />
       {/* PAGINATION */}
       <Pagination page={p} count={count} />
-    
     </div>
   );
 }

@@ -5,9 +5,25 @@ import TableSearch from "@/components/TableSearch";
 import { role, studentsData } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
-import { PAGE } from "@/lib/setting";
+import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
+import {
+  Attendance,
+  Class,
+  Grades,
+  Parent,
+  Prisma,
+  Result,
+  Student,
+} from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 
-
+type StudentList = Student & {
+  grades: Grades[];
+  class: Class;
+  attendance: Attendance[];
+  results: Result[];
+  parent: Parent[];
+};
 
 const columns = [
   {
@@ -40,7 +56,7 @@ const columns = [
   },
 ];
 
-const renderRow = async (student:any) => (
+const renderRow = async (student: StudentList) => (
   <tr
     key={student.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -55,11 +71,11 @@ const renderRow = async (student:any) => (
       />
       <div className="flex flex-col">
         <h3 className="font-semibold">{student.name}</h3>
-        <p className="text-xs text-gray-500">{student.class?.name}</p>
+        <p className="text-xs text-gray-500">{student.class.name[0]}</p>
       </div>
     </td>
     <td className="hidden md:table-cell">{student.surname}</td>
-    <td className="hidden md:table-cell">{student.class?.name}</td>
+    <td className="hidden md:table-cell">{student.class?.name[0]}</td>
     <td className="hidden md:table-cell">{student.phone}</td>
     <td className="hidden md:table-cell">{student.address}</td>
     <td>
@@ -79,109 +95,58 @@ const renderRow = async (student:any) => (
     </td>
   </tr>
 );
-const StudentListPage =  async ({
+const StudentListPage = async ({
   params,
   searchParams,
 }: {
   params: { slug: string };
   searchParams: { [key: string]: string };
 }) => {
+  const { page, ...queryPerams } = searchParams;
 
-  // const { page, ...queryPerams } = searchParams;
+  const p: number = typeof page === "string" ? parseInt(page) : 1;
 
-  // const p: number = typeof page === "string" ? parseInt(page) : 1;
+  // WHERE CLAUSE BASED ON  URLS PARAMS
 
-  // const buildWhereClause = (
-  //   queryPerams: { [key: string]: string },
-  //   teacherLessonsId:string[] | []
-    
-  // ) => {
-  //   const conditions: any[] = [];
-  //   if (queryPerams) {
-  //     for (const [key, value] of Object.entries(queryPerams)) {
-  //       if (value !== undefined) {
-  //         switch (key) {
-  //           case "search":
-  //             conditions.push(like(student.name, `%${value}%`));
-  //             break;
-  //             case "teacherId":
-  //               conditions.push( inArray(lesson.teacherId, teacherLessonsId),)
+  const query: Prisma.StudentWhereInput = {};
 
-  //         }
-  //       }
-  //     }
-  //   }
+  if (queryPerams) {
+    for (const [key, value] of Object.entries(queryPerams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "teacherId":
+            query.class = {
+              lessons: {
+                some: {
+                  teacherId: value,
+                },
+              },
+            };
+            break;
+          case "search":
+            query.name = { contains: value };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
 
-  //   return conditions.length > 0 ? and(...conditions) : conditions[0];
-  // };
-
-  // const { students, total }: { students: StudentList[]; total: number } =
-  //   await db.transaction(async (trx) => {
-     
-  //     let teacherLessonsId: string[] = []
-
-      
-      
-  //     const studentClasses: ClassList[] = await trx.query.classSchema.findMany({
-  //       with:{
-  //         lessons: true,
-  //         students: true
-  //       }
-  //     })
-
-  //     if(queryPerams.teacherId) {
-  //       teacherLessonsId = studentClasses.flatMap(classItem => 
-  //         classItem.lessons?.filter(lesson => lesson.teacherId === queryPerams.teacherId)
-  //         .map(lesson => lesson.teacherId) || []
-  //       );
-  //     }
-
-
-  //     const whereClause = buildWhereClause(queryPerams, teacherLessonsId);
-
-  //     console.log(teacherLessonsId);
-      
-
-  //     const students = await trx.query.student.findMany({
-  //       with: {
-  //         class: {
-  //         with: {
-  //             lessons: 
-  //             {
-  //               where: whereClause,
-  //               with: {
-  //                 teacher: true,
-  //               },
-  //             }
-  //           },
-  //         },
-  //       },
-
-  //       where: whereClause,
-  //       limit: PAGE,
-  //       offset: (p - 1) * PAGE,
-  //     });
-  //     let total = 0;
-
-  //     const totalResult = await trx
-  //       .select({
-  //         count: count(),
-  //       })
-  //       .from(student)
-
-  //       .where(whereClause)
-  //     total = totalResult[0]?.count ?? 0;
-
-  //     return {
-  //       students: students,
-  //       total: total,
-  //     };
-
-  //   });
-  //   console.log({students},{queryPerams},{total});
-    
-
-
+  const [students, count] = await prisma.$transaction([
+    prisma.student.findMany({
+      include: {
+        // parent:true,
+        class: true,
+      },
+      where: query,
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.student.count({
+      where: query,
+    }),
+  ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -207,9 +172,9 @@ const StudentListPage =  async ({
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={studentsData} />
-      {/* PAGINATION
-      <Pagination page={p} count={total} /> */}
+      <Table columns={columns} renderRow={renderRow} data={students} />
+      {/* PAGINATION */}
+      <Pagination page={p} count={count} />
     </div>
   );
 };

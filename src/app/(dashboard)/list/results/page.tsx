@@ -2,24 +2,61 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import { Prisma } from "@/generated/prisma";
 import { resultsData, role } from "@/lib/data";
+import { prisma } from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
 
-type Result = {
+type ResultList = Prisma.ResultGetPayload<{
+  include: {
+    student: {
+      select: {
+        name: true;
+        surname: true;
+      };
+    };
+    assignment: {
+      select: {
+        lesson: {
+          select: {
+            subject: {
+              select: {
+                name: true;
+              };
+            };
+            teacher: {
+              select: {
+                name: true;
+              };
+            };
+            class: {
+              select: {
+                name: true;
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+}>;
+
+type Results = {
   id: number;
-  subject: string;
-  class: string;
-  teacher: string;
-  student: string;
-  type: "exam" | "assignment";
-  date: string;
+  title: string;
+  studentName: string;
+  studentSurname: string;
+  teacherName: string;
   score: number;
+  className: string;
+  startTime: Date;
 };
 
 const columns = [
   {
-    header: "Subject Name",
-    accessor: "name",
+    header: "title",
+    accessor: "title",
   },
   {
     header: "Student",
@@ -51,31 +88,218 @@ const columns = [
   },
 ];
 
-const ResultListPage = () => {
-  const renderRow = (item: Result) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
-      <td>{item.student}</td>
-      <td className="hidden md:table-cell">{item.score}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
-      <td className="hidden md:table-cell">{item.class}</td>
-      <td className="hidden md:table-cell">{item.date}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          {(role === "admin" || role === "teacher") && (
-            <>
-              <FormModal table="result" type="update" data={item} />
-              <FormModal table="result" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+const renderRow = (item: Results) => (
+  <tr
+    key={item.id}
+    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+  >
+    <td className="flex items-center gap-4 p-4">{item.title}</td>
+    <td className="hidden md:table-cell">
+      {item.studentName + " " + item.studentSurname}
+    </td>
+    <td className="hidden md:table-cell">{item.score}</td>
+    <td className="hidden md:table-cell">{item.teacherName}</td>
+    <td className="hidden md:table-cell">{item.className}</td>
+    <td className="hidden md:table-cell">
+      {new Date(item.startTime).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })}
+    </td>
+    <td>
+      <div className="flex items-center gap-2">
+        {(role === "admin" || role === "teacher") && (
+          <>
+            <FormModal table="result" type="update" data={item} />
+            <FormModal table="result" type="delete" id={item.id} />
+          </>
+        )}
+      </div>
+    </td>
+  </tr>
+);
+const ResultListPage = async ({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { [key: string]: string };
+}) => {
+  const { page, ...queryPerams } = searchParams;
 
+  const p: number = typeof page === "string" ? parseInt(page) : 1;
+
+  // WHERE CLAUSE BASED ON  URLS PARAMS
+
+  const query: Prisma.ResultWhereInput = {};
+
+  if (queryPerams) {
+    for (const [key, value] of Object.entries(queryPerams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "studentId":
+            query.studentId = value;
+            break;
+          case "classId":
+            query.assignment = {
+              lesson: {
+                classId: parseInt(value),
+              },
+            };
+            break;
+          case "search":
+            query.OR = [
+              {
+                assignment: {
+                  lesson: {
+                    subject: {
+                      name: {
+                        contains: value,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                exam: {
+                  lesson: {
+                    subject: {
+                      name: {
+                        contains: value,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                student: {
+                  OR: [
+                    {
+                      name: { contains: value },
+                    },
+                    {
+                      surname: { contains: value },
+                    },
+                    {},
+                  ],
+                },
+              },
+              {
+                assignment: {
+                  lesson: {
+                   teacher: {
+                    OR: [
+                      {
+                        name: { contains: value },
+                      },
+                      {
+                        surname: { contains: value },
+                      },
+                    ]
+                    },
+                  },
+                }
+              
+              }
+              
+            ];
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.result.findMany({
+      include: {
+        student: {
+          select: {
+            name: true,
+            surname: true,
+          },
+        },
+        assignment: {
+          select: {
+            startDate: true,
+            lesson: {
+              select: {
+                subject: {
+                  select: {
+                    name: true,
+                  },
+                },
+                teacher: {
+                  select: {
+                    name: true,
+                    surname: true,
+                  },
+                },
+                class: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        exam: {
+          select: {
+            startTime: true,
+            lesson: {
+              select: {
+                subject: {
+                  select: {
+                    name: true,
+                  },
+                },
+                teacher: {
+                  select: {
+                    name: true,
+                    surname: true,
+                  },
+                },
+                class: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      where: query,
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.result.count({
+      where: query,
+    }),
+  ]);
+
+  const results = data.map((item) => {
+    const assessment = item.assignment || item.exam;
+    if (!assessment) return null;
+    const isExam = "startTime" in assessment;
+
+    return {
+      id: item.id,
+      title: assessment.lesson.subject.name,
+      studentName: item.student.name,
+      studentSurname: item.student.surname,
+      teacherName:
+        assessment.lesson.teacher.name +
+        " " +
+        assessment.lesson.teacher.surname,
+      score: item.score,
+      className: assessment.lesson.class.name,
+      startTime: isExam ? assessment.startTime : item.assignment?.startDate,
+    };
+  });
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -97,9 +321,9 @@ const ResultListPage = () => {
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={resultsData} />
+      <Table columns={columns} renderRow={renderRow} data={results} />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination count={count} page={p} />
     </div>
   );
 };
