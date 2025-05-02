@@ -6,8 +6,7 @@ import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
-import { role } from "@/lib/utils";
-
+import { currentUserId, role } from "@/lib/utils";
 
 type ResultList = Prisma.ResultGetPayload<{
   include: {
@@ -213,6 +212,41 @@ const ResultListPage = async ({
         }
       }
     }
+  }
+
+  //   WHERE CLAUSE BASED ON  URLS PARAMS
+
+  switch (role) {
+    case "student":
+      query.studentId = currentUserId;
+      break;
+    case "teacher":
+      query.OR = [
+        {
+          assignment: {
+            lesson: {
+              teacherId: currentUserId,
+            },
+          },
+        },
+        {
+          exam: {
+            lesson: {
+              teacherId: currentUserId,
+            },
+          },
+        },
+      ];
+      break;
+    case "parent":
+      query.student = {
+        parent: {
+          id: currentUserId,
+        },
+      };
+      break;
+    default:
+      break;
   }
 
   const [data, count] = await prisma.$transaction([

@@ -6,7 +6,7 @@ import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
-import { role } from "@/lib/utils";
+import { currentUserId, role } from "@/lib/utils";
 
 
 type ExamList = Prisma.ExamGetPayload<{
@@ -163,6 +163,41 @@ const ExamListPage = async ({
       }
     }
   }
+
+    // //  WHERE  CLAUSE BASED ON  THE ROLE
+
+    switch (role) {
+      case "student":
+        query.lesson = {
+          class: {
+            students: {
+              some: {
+                id: currentUserId,
+              },
+            },
+          },
+        };
+        break;
+      case "parent":
+        query.lesson = {
+          class: {
+            students: {
+              some: {
+                parentId: currentUserId,
+              },
+            },
+          },
+        };
+        break;
+        case "teacher":
+          query.lesson = {
+            teacherId: currentUserId,
+          };
+      default:
+        break;
+    }
+  
+    // GET DATA
 
   const [exams, count] = await prisma.$transaction([
     prisma.exam.findMany({

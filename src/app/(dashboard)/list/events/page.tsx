@@ -6,7 +6,7 @@ import { Prisma } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/utils";
+import { currentUserId, role } from "@/lib/utils";
 
 import Image from "next/image";
 
@@ -19,7 +19,6 @@ type EventList = Prisma.EventGetPayload<{
     };
   };
 }>;
-
 
 const columns = [
   {
@@ -61,7 +60,7 @@ const renderRow = (item: EventList) => (
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
   >
     <td className="flex items-center gap-4 p-4">{item.title}</td>
-    <td>{item.class?.name}</td>
+    <td>{item.class?.name || '-'}</td>
     <td className="hidden md:table-cell">
       {new Date(item.startTime).toLocaleDateString("en-US", {
         year: "numeric",
@@ -95,6 +94,7 @@ const renderRow = (item: EventList) => (
     </td>
   </tr>
 );
+
 const EventListPage = async ({
   params,
   searchParams,
@@ -124,6 +124,21 @@ const EventListPage = async ({
     }
   }
 
+  //  ROLE WHERE CONDITION
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: currentUserId } } },
+    student: { students: { some: { id: currentUserId } } },
+    parent: { students: { some: { parentId: currentUserId } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    { class: roleConditions[role as keyof typeof roleConditions] || {} },
+  ];
+
+
+
   const [events, count] = await prisma.$transaction([
     prisma.event.findMany({
       include: {
@@ -131,6 +146,8 @@ const EventListPage = async ({
           select: {
             name: true,
           },
+
+          
         },
       },
       where: query,
@@ -141,6 +158,8 @@ const EventListPage = async ({
       where: query,
     }),
   ]);
+
+  
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

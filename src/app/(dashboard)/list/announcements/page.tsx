@@ -5,17 +5,10 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/utils";
+import { currentUserId, role } from "@/lib/utils";
 import Image from "next/image";
 
-type Announcement = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
-};
-
-type AnnouncementList =  Prisma.AnnouncementGetPayload<{
+type AnnouncementList = Prisma.AnnouncementGetPayload<{
   include: {
     class: {
       select: {
@@ -39,40 +32,43 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-...( role === "admin" ? [{
-  header: "Actions",
-  accessor: "action",
-}] : []),
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
-const renderRow =  async(item: AnnouncementList) => {
-  
+const renderRow = async (item: AnnouncementList) => {
   return (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.title}</td>
-    <td>{item.class?.name}</td>
-    <td className="hidden md:table-cell">
-      {new Intl.DateTimeFormat("en-US", {
-        dateStyle: "long",
-      }).format(new Date(item.date))}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-            <FormModal table="announcement" type="update" data={item} />
-            <FormModal table="announcement" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">{item.title}</td>
+      <td>{item.class?.name || "general"}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US", {
+          dateStyle: "long",
+        }).format(new Date(item.date))}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {role === "admin" && (
+            <>
+              <FormModal table="announcement" type="update" data={item} />
+              <FormModal table="announcement" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 };
-const AnnouncementListPage =  async ({
+const AnnouncementListPage = async ({
   params,
   searchParams,
 }: {
@@ -85,6 +81,7 @@ const AnnouncementListPage =  async ({
   // WHERE CLAUSE BASED ON  URLS PARAMS
 
   const query: Prisma.AnnouncementWhereInput = {};
+  query.class = {};
 
   if (queryPerams) {
     for (const [key, value] of Object.entries(queryPerams)) {
@@ -100,6 +97,20 @@ const AnnouncementListPage =  async ({
     }
   }
 
+  // //  WHERE  CLAUSE BASED ON  THE ROLE
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: currentUserId } } },
+    student: { students: { some: { id: currentUserId } } },
+    parent: { students: { some: { parentId: currentUserId } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    { class: roleConditions[role as keyof typeof roleConditions] || {} },
+  ];
+
+  // GET DATA
   const [announcements, count] = await prisma.$transaction([
     prisma.announcement.findMany({
       include: {
@@ -108,8 +119,7 @@ const AnnouncementListPage =  async ({
             name: true,
           },
         },
-      }
-      ,
+      },
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
@@ -118,7 +128,6 @@ const AnnouncementListPage =  async ({
       where: query,
     }),
   ]);
-
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

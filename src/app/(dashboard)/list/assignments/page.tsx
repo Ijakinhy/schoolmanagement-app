@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/utils";
+import { currentUserId, role } from "@/lib/utils";
 import Image from "next/image";
 
 type AssignmentList =  Prisma.AssignmentGetPayload<{
@@ -94,20 +94,18 @@ const AssignmentListPage = async ({
   // WHERE CLAUSE BASED ON  URLS PARAMS
 
   const query: Prisma.AssignmentWhereInput = {};
+     query.lesson=  {}
 
   if (queryPerams) {
     for (const [key, value] of Object.entries(queryPerams)) {
       if (value !== undefined) {
         switch (key) {
           case "teacherId":
-            query.lesson = {
-              teacherId: value,
-            };
+            query.lesson.teacherId = value
+          
             break;
             case "classId":
-              query.lesson = {
-                classId: parseInt(value),
-              };
+              query.lesson.classId =parseInt(value)
           case "search":
             query.OR = [
               {
@@ -136,6 +134,41 @@ const AssignmentListPage = async ({
       } 
     }
   }
+
+     // WHERE CLAUSE BASED ON  ROLE
+
+     switch (role) {
+      case "teacher":
+        query.lesson.teacherId = currentUserId
+        break;
+        case "student":
+          query.lesson = {
+            class: {
+              students: {
+                some: {
+                  id: currentUserId,
+                },
+              },
+            },
+          }
+        break;
+        case "parent":
+          query.lesson = {
+            class: {
+              students: {
+                some: {
+                  parentId: currentUserId,
+                },
+              },
+            },
+          }
+        case "admin":
+          break;
+      default:
+        break;
+    }
+
+  // GET DATA FROM DATABASE
 
   const [assignments, count] = await prisma.$transaction([
     prisma.assignment.findMany({
