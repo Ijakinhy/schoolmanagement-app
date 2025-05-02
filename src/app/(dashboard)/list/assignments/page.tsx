@@ -3,9 +3,10 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { assignmentsData, role } from "@/lib/data";
+import { assignmentsData} from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 
 type AssignmentList =  Prisma.AssignmentGetPayload<{
@@ -45,7 +46,11 @@ const columns = [
   },
 ];
 
-const renderRow = (item: AssignmentList) => (
+const renderRow = async(item: AssignmentList) => {
+  const user =  await  currentUser()
+  const role =  (user?.publicMetadata as {role:string}).role
+
+  return (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -74,7 +79,8 @@ const renderRow = (item: AssignmentList) => (
       </div>
     </td>
   </tr>
-);
+  )
+};
 const AssignmentListPage = async ({
   params,
   searchParams,
@@ -83,6 +89,8 @@ const AssignmentListPage = async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
+  const user =  await  currentUser()
+  const role =  (user?.publicMetadata as {role:string}).role
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 

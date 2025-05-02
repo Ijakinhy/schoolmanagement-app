@@ -3,10 +3,15 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Parent, Prisma, Student } from "@/generated/prisma";
-import { parentsData, role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
+import { currentUser } from "@clerk/nextjs/server";
+
+
+
+const user = await currentUser()
+const role =  (user?.publicMetadata as {role: string}).role
 
 type ParentsList = Parent & {
   students:Student[]

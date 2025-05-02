@@ -3,9 +3,10 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { eventsData, role } from "@/lib/data";
+
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 
 
@@ -19,6 +20,8 @@ type EventList = Prisma.EventGetPayload<{
     };
   };
 }>;
+const user = await currentUser()
+const role =  (user?.publicMetadata as {role: string}).role
 
 const columns = [
   {

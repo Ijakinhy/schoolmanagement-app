@@ -3,9 +3,10 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { announcementsData, role } from "@/lib/data";
+import { announcementsData } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 
 type Announcement = {
@@ -45,7 +46,10 @@ const columns = [
   },
 ];
 
-const renderRow = (item: AnnouncementList) => (
+const renderRow =  async(item: AnnouncementList) => {
+  const user =  await  currentUser()
+  const role =  (user?.publicMetadata as {role:string}).role
+  return (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
@@ -68,7 +72,8 @@ const renderRow = (item: AnnouncementList) => (
       </div>
     </td>
   </tr>
-);
+  );
+};
 const AnnouncementListPage =  async ({
   params,
   searchParams,
@@ -77,6 +82,8 @@ const AnnouncementListPage =  async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
+  const user =  await  currentUser()
+  const role =  (user?.publicMetadata as {role:string}).role
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 

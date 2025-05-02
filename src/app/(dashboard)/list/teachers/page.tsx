@@ -2,13 +2,18 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role, teachersData } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
 import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
+
+
+
+const user = await currentUser()
+const role =  (user?.publicMetadata as {role: string}).role
 
 type TeacherList = Teacher & {
   subjects: Subject[];
