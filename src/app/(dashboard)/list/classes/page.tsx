@@ -3,17 +3,19 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { classesData, role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { role } from "@/lib/utils";
+
 import Image from "next/image";
 
-type ClassList =   Prisma.ClassGetPayload<{
+type ClassList = Prisma.ClassGetPayload<{
   include: {
     grade: true;
     supervisor: true;
   };
 }>;
+
 
 const columns = [
   {
@@ -35,10 +37,14 @@ const columns = [
     accessor: "supervisor",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: ClassList) => (
@@ -49,7 +55,9 @@ const renderRow = (item: ClassList) => (
     <td className="flex items-center gap-4 p-4">{item.name}</td>
     <td className="hidden md:table-cell">{item.capacity}</td>
     <td className="hidden md:table-cell">{item.grade.level}</td>
-    <td className="hidden md:table-cell">{item.supervisor.name + " " + item.supervisor.surname}</td>
+    <td className="hidden md:table-cell">
+      {item.supervisor.name + " " + item.supervisor.surname}
+    </td>
     <td>
       <div className="flex items-center gap-2">
         {role === "admin" && (
@@ -82,7 +90,7 @@ const ClassListPage = async ({
       if (value !== undefined) {
         switch (key) {
           case "supervisorId":
-            query.supervisorId =value
+            query.supervisorId = value;
             break;
           case "search":
             query.name = { contains: value };
@@ -97,8 +105,8 @@ const ClassListPage = async ({
   const [classes, count] = await prisma.$transaction([
     prisma.class.findMany({
       include: {
-        grade:true,
-        supervisor:true
+        grade: true,
+        supervisor: true,
       },
       where: query,
       take: ITEM_PER_PAGE,

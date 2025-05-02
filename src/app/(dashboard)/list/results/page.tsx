@@ -3,10 +3,10 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { resultsData, role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
+import { currentUserId, role } from "@/lib/utils";
 
 type ResultList = Prisma.ResultGetPayload<{
   include: {
@@ -82,10 +82,14 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role === "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: Results) => (
@@ -188,21 +192,19 @@ const ResultListPage = async ({
               {
                 assignment: {
                   lesson: {
-                   teacher: {
-                    OR: [
-                      {
-                        name: { contains: value },
-                      },
-                      {
-                        surname: { contains: value },
-                      },
-                    ]
+                    teacher: {
+                      OR: [
+                        {
+                          name: { contains: value },
+                        },
+                        {
+                          surname: { contains: value },
+                        },
+                      ],
                     },
                   },
-                }
-              
-              }
-              
+                },
+              },
             ];
             break;
           default:
@@ -210,6 +212,41 @@ const ResultListPage = async ({
         }
       }
     }
+  }
+
+  //   WHERE CLAUSE BASED ON  URLS PARAMS
+
+  switch (role) {
+    case "student":
+      query.studentId = currentUserId;
+      break;
+    case "teacher":
+      query.OR = [
+        {
+          assignment: {
+            lesson: {
+              teacherId: currentUserId,
+            },
+          },
+        },
+        {
+          exam: {
+            lesson: {
+              teacherId: currentUserId,
+            },
+          },
+        },
+      ];
+      break;
+    case "parent":
+      query.student = {
+        parent: {
+          id: currentUserId,
+        },
+      };
+      break;
+    default:
+      break;
   }
 
   const [data, count] = await prisma.$transaction([

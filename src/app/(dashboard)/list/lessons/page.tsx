@@ -3,12 +3,15 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { lessonsData, role } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
+import { role } from "@/lib/utils";
 
-type LessonList  = Prisma.LessonGetPayload<{
+
+
+
+type LessonList = Prisma.LessonGetPayload<{
   include: {
     teacher: true;
     subject: true;
@@ -30,10 +33,14 @@ const columns = [
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: LessonList) => (
@@ -43,7 +50,9 @@ const renderRow = (item: LessonList) => (
   >
     <td className="flex items-center gap-4 p-4">{item.subject.name}</td>
     <td>{item.class.name}</td>
-    <td className="hidden md:table-cell">{item.teacher.name + " " + item.teacher.surname}</td>
+    <td className="hidden md:table-cell">
+      {item.teacher.name + " " + item.teacher.surname}
+    </td>
     <td>
       <div className="flex items-center gap-2">
         {role === "admin" && (
@@ -76,28 +85,29 @@ const LessonListPage = async ({
       if (value !== undefined) {
         switch (key) {
           case "teacherId":
-            query.teacherId =value
+            query.teacherId = value;
             break;
           case "search":
-            query.OR =  [
+            query.OR = [
               { subject: { name: { contains: value } } },
-              { teacher: { name: { contains: value } } },            ]
+              { teacher: { name: { contains: value } } },
+            ];
             break;
-            case "classId":
-              query.classId = parseInt(value);
+          case "classId":
+            query.classId = parseInt(value);
           default:
             break;
         }
-      } 
+      }
     }
   }
 
   const [lessons, count] = await prisma.$transaction([
     prisma.lesson.findMany({
       include: {
-        teacher:{select:{name:true,surname:true}},
-        subject:{select:{name:true}},
-        class:{select:{name:true}}
+        teacher: { select: { name: true, surname: true } },
+        subject: { select: { name: true } },
+        class: { select: { name: true } },
       },
       where: query,
       take: ITEM_PER_PAGE,
@@ -107,7 +117,7 @@ const LessonListPage = async ({
       where: query,
     }),
   ]);
-  
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
