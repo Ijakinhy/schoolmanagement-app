@@ -6,11 +6,7 @@ import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
-import { currentUser } from "@clerk/nextjs/server";
-
-
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
+import { role } from "@/lib/utils";
 
 
 type ExamList = Prisma.ExamGetPayload<{
@@ -24,8 +20,6 @@ type ExamList = Prisma.ExamGetPayload<{
     };
   };
 }>;
-
-
 
 const columns = [
   {
@@ -51,10 +45,14 @@ const columns = [
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role === "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: ExamList) => (
@@ -64,7 +62,9 @@ const renderRow = (item: ExamList) => (
   >
     <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
     <td>{item.lesson.class.name}</td>
-    <td className="hidden md:table-cell">{item.lesson.teacher.name + " "+ item.lesson.teacher.surname}</td>
+    <td className="hidden md:table-cell">
+      {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
+    </td>
     <td className="hidden md:table-cell">
       {new Date(item.startTime).toLocaleDateString("en-US", {
         year: "numeric",
@@ -131,10 +131,10 @@ const ExamListPage = async ({
               teacherId: value,
             };
             break;
-            case "classId":
-              query.lesson = {
-                classId: parseInt(value),
-              };
+          case "classId":
+            query.lesson = {
+              classId: parseInt(value),
+            };
           case "search":
             query.OR = [
               {
@@ -160,7 +160,7 @@ const ExamListPage = async ({
           default:
             break;
         }
-      } 
+      }
     }
   }
 
@@ -169,12 +169,12 @@ const ExamListPage = async ({
       include: {
         // teacher:{select:{name:true,surname:true}},
         lesson: {
-          select:{
-            subject:{select:{name:true}},
-            teacher:{select:{name:true,surname:true}},
-            class:{select:{name:true}},
-          }
-        }
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true, surname: true } },
+            class: { select: { name: true } },
+          },
+        },
       },
       where: query,
       take: ITEM_PER_PAGE,

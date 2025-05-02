@@ -6,10 +6,9 @@ import { Prisma } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
+
 import Image from "next/image";
-
-
 
 type EventList = Prisma.EventGetPayload<{
   include: {
@@ -20,8 +19,7 @@ type EventList = Prisma.EventGetPayload<{
     };
   };
 }>;
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
+
 
 const columns = [
   {
@@ -47,10 +45,14 @@ const columns = [
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: EventList) => (
@@ -60,28 +62,27 @@ const renderRow = (item: EventList) => (
   >
     <td className="flex items-center gap-4 p-4">{item.title}</td>
     <td>{item.class?.name}</td>
-    <td className="hidden md:table-cell">{
-      new Date(item.startTime).toLocaleDateString("en-US", {
+    <td className="hidden md:table-cell">
+      {new Date(item.startTime).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
-      })
-    }</td>
-    <td className="hidden md:table-cell">{
-      new Date(item.startTime).toLocaleDateString("en-US", {
-
+      })}
+    </td>
+    <td className="hidden md:table-cell">
+      {new Date(item.startTime).toLocaleDateString("en-US", {
         hour: "numeric",
         minute: "numeric",
         hour12: true,
-      })
-    }</td>
-    <td className="hidden md:table-cell">{
-      new Date(item.endTime).toLocaleDateString("en-US", {
+      })}
+    </td>
+    <td className="hidden md:table-cell">
+      {new Date(item.endTime).toLocaleDateString("en-US", {
         hour: "numeric",
         minute: "numeric",
         hour12: true,
-      })
-    }</td>
+      })}
+    </td>
     <td>
       <div className="flex items-center gap-2">
         {role === "admin" && (
@@ -131,8 +132,7 @@ const EventListPage = async ({
             name: true,
           },
         },
-      }
-      ,
+      },
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),

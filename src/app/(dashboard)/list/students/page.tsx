@@ -15,12 +15,8 @@ import {
   Student,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
 
-
-
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
 
 type StudentList = Student & {
   grades: Grades[];
@@ -55,10 +51,14 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = async (student: StudentList) => (

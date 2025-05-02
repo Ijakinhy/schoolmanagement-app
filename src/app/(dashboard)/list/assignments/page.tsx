@@ -3,10 +3,9 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { assignmentsData} from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
 import Image from "next/image";
 
 type AssignmentList =  Prisma.AssignmentGetPayload<{
@@ -20,6 +19,7 @@ type AssignmentList =  Prisma.AssignmentGetPayload<{
     };
   };
 }>;
+
 
 const columns = [
   {
@@ -40,15 +40,14 @@ const columns = [
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
-  {
+  ...( role === "admin" || role === "teacher" ? [{
     header: "Actions",
     accessor: "action",
-  },
+  }]:[]),
 ];
 
 const renderRow = async(item: AssignmentList) => {
-  const user =  await  currentUser()
-  const role =  (user?.publicMetadata as {role:string}).role
+ 
 
   return (
   <tr
@@ -89,9 +88,7 @@ const AssignmentListPage = async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
-  const user =  await  currentUser()
-  const role =  (user?.publicMetadata as {role:string}).role
-
+  
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
   // WHERE CLAUSE BASED ON  URLS PARAMS

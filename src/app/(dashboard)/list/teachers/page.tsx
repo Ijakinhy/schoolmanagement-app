@@ -2,18 +2,13 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/setting";
+import { role } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
-import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
-import { PrismaClient } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
 
-
-
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
 
 type TeacherList = Teacher & {
   subjects: Subject[];
@@ -51,10 +46,14 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: TeacherList) => (
@@ -108,7 +107,7 @@ const renderRow = (item: TeacherList) => (
   </tr>
 );
 
- const  TeacherListPage = async ({
+const TeacherListPage = async ({
   params,
   searchParams,
 }: {
@@ -191,6 +190,6 @@ const renderRow = (item: TeacherList) => (
       <Pagination page={p} count={count} />
     </div>
   );
-}
+};
 
 export default TeacherListPage;

@@ -6,14 +6,8 @@ import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
 
-
-
-
-
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
 
 type ResultList = Prisma.ResultGetPayload<{
   include: {
@@ -89,10 +83,14 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role === "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: Results) => (
@@ -195,21 +193,19 @@ const ResultListPage = async ({
               {
                 assignment: {
                   lesson: {
-                   teacher: {
-                    OR: [
-                      {
-                        name: { contains: value },
-                      },
-                      {
-                        surname: { contains: value },
-                      },
-                    ]
+                    teacher: {
+                      OR: [
+                        {
+                          name: { contains: value },
+                        },
+                        {
+                          surname: { contains: value },
+                        },
+                      ],
                     },
                   },
-                }
-              
-              }
-              
+                },
+              },
             ];
             break;
           default:

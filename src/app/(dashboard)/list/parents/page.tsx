@@ -6,16 +6,14 @@ import { Parent, Prisma, Student } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import Image from "next/image";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
 
 
 
-const user = await currentUser()
-const role =  (user?.publicMetadata as {role: string}).role
 
 type ParentsList = Parent & {
-  students:Student[]
-}
+  students: Student[];
+};
 const columns = [
   {
     header: "Info",
@@ -36,10 +34,14 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: ParentsList) => (
@@ -53,7 +55,9 @@ const renderRow = (item: ParentsList) => (
         <p className="text-xs text-gray-500">{item?.email}</p>
       </div>
     </td>
-    <td className="hidden md:table-cell">{item.students.map(student=> student.name).join(", ")}</td>
+    <td className="hidden md:table-cell">
+      {item.students.map((student) => student.name).join(", ")}
+    </td>
     <td className="hidden md:table-cell">{item.phone}</td>
     <td className="hidden md:table-cell">{item.address}</td>
     <td>
@@ -75,46 +79,41 @@ const ParentListPage = async ({
   params: { slug: string };
   searchParams: { [key: string]: string };
 }) => {
-
   const { page, ...queryPerams } = searchParams;
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
-  
-    const query: Prisma.ParentWhereInput= {}
-  
-    if(queryPerams) {
-      for (const [key,value]  of Object.entries(queryPerams)) {
-        if(value !== undefined) {
-          switch(key) {
-              case "search": 
-              query.name = { contains: value }
-              break
-              default:
-                break
-          }
+
+  const query: Prisma.ParentWhereInput = {};
+
+  if (queryPerams) {
+    for (const [key, value] of Object.entries(queryPerams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.name = { contains: value };
+            break;
+          default:
+            break;
         }
-        
       }
     }
+  }
 
-  const [parents,count] =  await prisma.$transaction([
-      prisma.parent.findMany({ 
-      include:{
-        students:true
-        
+  const [parents, count] = await prisma.$transaction([
+    prisma.parent.findMany({
+      include: {
+        students: true,
       },
       where: query,
-      take:ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE *(p-1)
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
     }),
-      prisma.parent.count({
-        where:query
-      })
-
-  
-  ])
+    prisma.parent.count({
+      where: query,
+    }),
+  ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

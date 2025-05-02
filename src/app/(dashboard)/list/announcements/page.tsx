@@ -3,10 +3,9 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-import { announcementsData } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUser } from "@clerk/nextjs/server";
+import { role } from "@/lib/utils";
 import Image from "next/image";
 
 type Announcement = {
@@ -40,15 +39,14 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+...( role === "admin" ? [{
+  header: "Actions",
+  accessor: "action",
+}] : []),
 ];
 
 const renderRow =  async(item: AnnouncementList) => {
-  const user =  await  currentUser()
-  const role =  (user?.publicMetadata as {role:string}).role
+  
   return (
   <tr
     key={item.id}
@@ -82,9 +80,6 @@ const AnnouncementListPage =  async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
-  const user =  await  currentUser()
-  const role =  (user?.publicMetadata as {role:string}).role
-
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
