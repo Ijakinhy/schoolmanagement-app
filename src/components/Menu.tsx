@@ -68,8 +68,8 @@ const menuItems = [
       },
       {
         icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
+        label: "Attendances",
+        href: "/list/attendances",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
@@ -117,10 +117,10 @@ const menuItems = [
   },
 ];
 
-const Menu = async() => {
- const  user =  await currentUser();
-  const role  = (user?.publicMetadata as {role:string}).role
-  
+const Menu = async () => {
+  const user = await currentUser();
+  const role = (user?.publicMetadata as { role: string }).role
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((i) => (
