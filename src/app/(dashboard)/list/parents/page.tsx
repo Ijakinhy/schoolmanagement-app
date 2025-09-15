@@ -5,15 +5,12 @@ import TableSearch from "@/components/TableSearch";
 import { Parent, Prisma, Student } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
-import { role } from "@/lib/utils";
-
-
-
-
 type ParentsList = Parent & {
   students: Student[];
 };
+const { role, currentUserId } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Info",
@@ -36,11 +33,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

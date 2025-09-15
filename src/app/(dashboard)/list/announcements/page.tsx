@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUserId, role } from "@/lib/utils";
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
 
 type AnnouncementList = Prisma.AnnouncementGetPayload<{
@@ -17,7 +17,7 @@ type AnnouncementList = Prisma.AnnouncementGetPayload<{
     };
   };
 }>;
-
+const { role, currentUserId } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Title",
@@ -34,11 +34,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

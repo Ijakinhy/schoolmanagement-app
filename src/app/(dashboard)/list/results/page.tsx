@@ -5,8 +5,8 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import Image from "next/image";
-import { currentUserId, role } from "@/lib/utils";
+import { getCurrentUserAndRole } from "@/lib/utils";
+import Image from "next/image";;
 
 type ResultList = Prisma.ResultGetPayload<{
   include: {
@@ -16,6 +16,7 @@ type ResultList = Prisma.ResultGetPayload<{
         surname: true;
       };
     };
+
     assignment: {
       select: {
         lesson: {
@@ -42,6 +43,7 @@ type ResultList = Prisma.ResultGetPayload<{
   };
 }>;
 
+
 type Results = {
   id: number;
   title: string;
@@ -52,6 +54,9 @@ type Results = {
   className: string;
   startTime: Date;
 };
+
+const { role, currentUserId } = await getCurrentUserAndRole();
+
 
 const columns = [
   {
@@ -84,11 +89,11 @@ const columns = [
   },
   ...(role === "admin" || role === "teacher"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

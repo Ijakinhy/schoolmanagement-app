@@ -3,10 +3,9 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
-
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUserId, role } from "@/lib/utils";
+import { getCurrentUserAndRole } from "@/lib/utils";
 
 import Image from "next/image";
 
@@ -20,6 +19,7 @@ type EventList = Prisma.EventGetPayload<{
   };
 }>;
 
+const { role, currentUserId } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Title",
@@ -46,11 +46,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 
@@ -147,7 +147,7 @@ const EventListPage = async ({
             name: true,
           },
 
-          
+
         },
       },
       where: query,
@@ -159,7 +159,7 @@ const EventListPage = async ({
     }),
   ]);
 
-  
+
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

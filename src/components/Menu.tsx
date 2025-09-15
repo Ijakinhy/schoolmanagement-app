@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -118,8 +118,8 @@ const menuItems = [
 ];
 
 const Menu = async () => {
-  const user = await currentUser();
-  const role = (user?.publicMetadata as { role: string }).role
+  const { role } = await getCurrentUserAndRole();
+
 
   return (
     <div className="mt-4 text-sm">

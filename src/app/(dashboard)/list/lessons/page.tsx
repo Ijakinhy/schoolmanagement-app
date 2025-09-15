@@ -5,8 +5,9 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
-import { role } from "@/lib/utils";
+
 
 
 
@@ -18,6 +19,7 @@ type LessonList = Prisma.LessonGetPayload<{
     class: true;
   };
 }>;
+const { role } = await getCurrentUserAndRole();
 
 const columns = [
   {
@@ -35,11 +37,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

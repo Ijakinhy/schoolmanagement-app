@@ -1,9 +1,13 @@
 import { currentUser } from "@clerk/nextjs/server";
 
-const user = await currentUser();
-export const role = (user?.publicMetadata as { role: string }).role;
-export const currentUserId = user?.id;
 
+export async function getCurrentUserAndRole() {
+  const user = await currentUser();
+  return {
+    currentUserId: user?.id ?? undefined,
+    role: (user?.publicMetadata as { role?: string })?.role ?? "guest",
+  };
+}
 export const currentworkWeek = () => {
   const today = new Date();
   const dayOfWeek = today.getDay();

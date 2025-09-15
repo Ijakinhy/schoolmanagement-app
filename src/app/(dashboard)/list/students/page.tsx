@@ -15,8 +15,7 @@ import {
   Student,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import { role } from "@/lib/utils";
-
+import { getCurrentUserAndRole } from "@/lib/utils";
 
 type StudentList = Student & {
   grades: Grades[];
@@ -25,7 +24,7 @@ type StudentList = Student & {
   results: Result[];
   parent: Parent[];
 };
-
+const { role, currentUserId } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Info",
@@ -53,11 +52,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

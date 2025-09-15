@@ -5,8 +5,7 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/utils";
-
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
 
 type ClassList = Prisma.ClassGetPayload<{
@@ -16,6 +15,7 @@ type ClassList = Prisma.ClassGetPayload<{
   };
 }>;
 
+const { role, currentUserId } = await getCurrentUserAndRole();
 
 const columns = [
   {
@@ -39,11 +39,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

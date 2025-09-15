@@ -5,13 +5,13 @@ import TableSearch from "@/components/TableSearch";
 import { Prisma, Subject, Teacher } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
-import { role } from "@/lib/utils";
 
 type SubjectList = Subject & {
   teachers: Teacher[];
 };
-
+const { role, currentUserId } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Subject Name",
@@ -24,11 +24,11 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
 

@@ -5,10 +5,12 @@ import TableSearch from "@/components/TableSearch";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/utils";
+import { getCurrentUserAndRole } from "@/lib/utils";
+// import { role } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
+const { role } = await getCurrentUserAndRole();
 
 type TeacherList = Teacher & {
   subjects: Subject[];
@@ -48,13 +50,14 @@ const columns = [
   },
   ...(role === "admin"
     ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
+      {
+        header: "Actions",
+        accessor: "action",
+      },
+    ]
     : []),
 ];
+
 
 const renderRow = (item: TeacherList) => (
   <tr
