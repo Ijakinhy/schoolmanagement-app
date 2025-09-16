@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import { useState } from "react";
 
 const schema = z.object({
   username: z
@@ -19,8 +20,7 @@ const schema = z.object({
   lastName: z.string().min(1, { message: "Last name is required!" }),
   phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
+  birthday: z.coerce.date({ message: "Birthday is required!" }),
   sex: z.enum(["male", "female"], { message: "Sex is required!" }),
   img: z.instanceof(File, { message: "Image is required" }),
 });
@@ -37,17 +37,29 @@ const TeacherForm = ({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
   });
-
+  const [preview, setPreview] = useState("");
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
+    console.log("submit", data);
   });
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setValue("img", file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+
+    // optional cleanup when the object URL changes
+    return () => URL.revokeObjectURL(objectUrl);
+  };
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form method="POST" className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
         {type === "create"
           ? "Create a new teacher"
@@ -113,18 +125,12 @@ const TeacherForm = ({
           error={errors.address}
         />
         <InputField
-          label="Blood Type"
-          name="bloodType"
-          defaultValue={data?.bloodType}
-          register={register}
-          error={errors.bloodType}
-        />
-        <InputField
           label="Birthday"
           name="birthday"
           defaultValue={data?.birthday}
           register={register}
           error={errors.birthday}
+
           type="date"
         />
         <div className="flex flex-col gap-2 w-full md:w-1/4">
@@ -144,14 +150,31 @@ const TeacherForm = ({
           )}
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center">
-          <label
+          {/* <label
             className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
             htmlFor="img"
           >
             <Image src="/upload.png" alt="" width={28} height={28} />
             <span>Upload a photo</span>
-          </label>
-          <input type="file" id="img" {...register("img")} className="hidden" />
+          </label> */}
+          <div className="flex items-center space-x-6">
+            <label
+              className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
+              htmlFor="img"
+            >
+              {preview ?
+                <div className="shrink-0">
+                  <Image id='preview_img' width={64} height={64} className="h-16 w-16 object-cover rounded-full" src={preview} alt="Current profile photo" />
+                </div>
+                :
+                <>
+                  <Image src="/upload.png" alt="" width={28} height={28} />
+                  <span>Upload a photo</span></>
+              }
+
+            </label>
+          </div>
+          <input type="file" id="img" {...register("img", { onChange: handleFileChange })} className="hidden" />
           {errors.img?.message && (
             <p className="text-xs text-red-400">
               {errors.img.message.toString()}
@@ -159,7 +182,7 @@ const TeacherForm = ({
           )}
         </div>
       </div>
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

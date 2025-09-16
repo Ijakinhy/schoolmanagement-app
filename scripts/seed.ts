@@ -54,7 +54,6 @@ async function main() {
         email: `teacher${i}@school.edu`,
         phone: `123-456-${7000 + i}`,
         address: `${i} Teacher Street, Education City`,
-        bloodType: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"][i % 8],
         sex: i % 2 === 0 ? UserSex.Male : UserSex.Famale,
         birthday: new Date(1970 + (i % 30), (i % 12), (i % 28) + 1),
         subjects: {
@@ -124,7 +123,6 @@ async function main() {
         email: `student${i}@school.edu`,
         phone: `987-123-${1000 + i}`,
         address: `${Math.ceil(parentIndex / 2)} Family Avenue, School District`,
-        bloodType: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"][i % 8],
         sex: i % 2 === 0 ? UserSex.Male : UserSex.Famale,
         parentId: `parent${parentIndex}`,
         gradeId: gradeId,

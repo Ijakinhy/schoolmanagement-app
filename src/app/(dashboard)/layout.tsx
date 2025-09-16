@@ -2,6 +2,7 @@ import Menu from "@/components/Menu";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import Link from "next/link";
+import { ToastContainer } from "react-toastify";
 
 export default function DashboardLayout({
   children,
@@ -40,6 +41,8 @@ export default function DashboardLayout({
         </div>
         {children}
       </div>
+      <ToastContainer theme="dark" />
+
     </div>
   );
 }

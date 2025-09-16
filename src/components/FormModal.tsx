@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
   loading: () => <h1>Loading...</h1>,
@@ -68,18 +68,18 @@ const FormModal = ({
   id,
 }: {
   table:
-    | "teacher"
-    | "student"
-    | "parent"
-    | "subject"
-    | "class"
-    | "lesson"
-    | "exam"
-    | "assignment"
-    | "result"
-    | "attendance"
-    | "event"
-    | "announcement";
+  | "teacher"
+  | "student"
+  | "parent"
+  | "subject"
+  | "class"
+  | "lesson"
+  | "exam"
+  | "assignment"
+  | "result"
+  | "attendance"
+  | "event"
+  | "announcement";
   type: "create" | "update" | "delete";
   data?: any;
   id?: String | number;
@@ -89,29 +89,35 @@ const FormModal = ({
     type === "create"
       ? "bg-uiYellow"
       : type === "update"
-      ? table === "teacher"
-        ? "bg-uiYellow"
-        : "bg-uiSky"
-      : "bg-uiPurple";
+        ? table === "teacher"
+          ? "bg-uiYellow"
+          : "bg-uiSky"
+        : "bg-uiPurple";
 
   const [open, setOpen] = useState(false);
 
-  const Form = () => {
-    return type === "delete" && id ? (
-      <form action="" className="p-4 flex flex-col gap-4 bg-ui">
-        <span className="text-center font-medium">
-          All data will be lost. Are you sure you want to delete this {table}?
-        </span>
-        <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-          Delete
-        </button>
-      </form>
-    ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
-    ) : (
-      "Form not found!"
-    );
-  };
+
+
+  const renderForm = useCallback(() => {
+    if (type === "delete" && id) {
+      return (
+        <form action="" className="p-4 flex flex-col gap-4 bg-ui">
+          <span className="text-center font-medium">
+            All data will be lost. Are you sure you want to delete this {table}?
+          </span>
+          <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
+            Delete
+          </button>
+        </form>
+      );
+    }
+
+    if (type === "create" || type === "update") {
+      return forms[table](type, data);
+    }
+
+    return "Form not found!";
+  }, [type, id, table, data]);
 
   return (
     <>
@@ -124,7 +130,7 @@ const FormModal = ({
       {open && (
         <div className="w-full h-full overflow-y-hidden fixed left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
-            <Form />
+            {renderForm()}
             <div
               className="absolute top-4 right-4 cursor-pointer"
               onClick={() => setOpen(false)}
@@ -138,4 +144,4 @@ const FormModal = ({
   );
 };
 
-export default FormModal;
+export default memo(FormModal);

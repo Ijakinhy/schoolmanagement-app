@@ -22,7 +22,6 @@ model Student {
   phone      String?      @unique
   address    String
   image      String?
-  bloodType  String
   sex        UserSex
   createdAt  DateTime     @default(now())
   parentId   String
@@ -57,7 +56,6 @@ model Teacher {
   phone     String?   @unique
   address   String
   image     String?
-  bloodType String
   sex       UserSex
   createdAt DateTime  @default(now())
   subjects  Subject[]

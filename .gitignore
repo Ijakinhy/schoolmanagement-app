@@ -37,3 +37,5 @@ next-env.d.ts
 
 # prisma client
 src/generated/prisma/
+prisma/migrations
+

@@ -6,7 +6,6 @@ import { Class, Lesson, Prisma, Subject, Teacher } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
 import { getCurrentUserAndRole } from "@/lib/utils";
-// import { role } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -177,9 +176,6 @@ const TeacherListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-uiYellow">
-              //   <Image src="/plus.png" alt="" width={14} height={14} />
-              // </button>
               <>
                 <FormModal table="teacher" type="create" />
               </>

@@ -11,7 +11,7 @@ import Image from "next/image";
 type SubjectList = Subject & {
   teachers: Teacher[];
 };
-const { role, currentUserId } = await getCurrentUserAndRole();
+const { role } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Subject Name",
@@ -90,6 +90,7 @@ const SubjectListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: { id: "desc" }
     }),
     prisma.subject.count({
       where: query,
@@ -110,7 +111,7 @@ const SubjectListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-uiYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormModal table="teacher" type="create" />}
+            {role === "admin" && <FormModal table="subject" type="create" />}
           </div>
         </div>
       </div>
