@@ -1,20 +1,33 @@
 "use server"
-
-import { error } from "console"
+import { UseFormResetField } from "react-hook-form"
 import { SubjectSchema } from "./datasource"
 import { prisma } from "./prisma"
-import { revalidatePath } from "next/cache"
 
 export const createSubject = async (currentState: { success: boolean, error: boolean }, data: SubjectSchema) => {
     try {
-        await prisma.subject.create({
-            data: {
-                name: data.name
+        if (data.id) {
+            await prisma.subject.update({
+                where: {
+                    id: data.id
+                },
+                data: {
+                    name: data.name
+                }
+            })
+            return {
+                success: true,
+                error: false
             }
-        })
-        return {
-            success: true,
-            error: false
+        } else {
+            await prisma.subject.create({
+                data: {
+                    name: data.name
+                }
+            })
+            return {
+                success: true,
+                error: false
+            }
         }
     } catch (error) {
         console.log(error)

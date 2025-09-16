@@ -23,6 +23,7 @@ const SubjectForm = ({
   const {
     register,
     handleSubmit,
+    resetField,
     formState: { errors },
   } = useForm<SubjectSchema>({
     resolver: zodResolver(subjectSchema),
@@ -31,11 +32,13 @@ const SubjectForm = ({
 
   const onSubmit = handleSubmit((data) => {
     formAction(data)
+
   });
   const router = useRouter()
   useEffect(() => {
     if (state.success) {
       toast(`Subject ${type === "create" ? "created" : "updated"} successfully`)
+      resetField("name")
       router.refresh()
     }
 
@@ -46,6 +49,7 @@ const SubjectForm = ({
         {type === "create" ? "Create a new subject" : "Edit subject details"}
       </h1>
       <div className="flex justify-between flex-wrap gap-4">
+
         <InputField
           label="Subject Name"
           name="name"
@@ -53,6 +57,7 @@ const SubjectForm = ({
           register={register}
           error={errors?.name}
         />
+        <input type="hidden" {...register("id")} defaultValue={data?.id} />
       </div>
       {state.error && <p className="text-xs text-red-400">Something went wrong</p>}
       <button className="bg-blue-400 text-white p-2 rounded-md">
