@@ -1,3 +1,4 @@
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -155,6 +156,9 @@ const TeacherListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        createdAt: "desc",
+      }
     }),
     prisma.teacher.count({
       where: query,
@@ -177,7 +181,7 @@ const TeacherListPage = async ({
             </button>
             {role === "admin" && (
               <>
-                <FormModal table="teacher" type="create" />
+                <FormContainer table="teacher" type="create" />
               </>
             )}
           </div>
