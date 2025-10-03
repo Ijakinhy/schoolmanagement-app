@@ -11,7 +11,10 @@ export const createSubject = async (currentState: { success: boolean, error: boo
                     id: data.id
                 },
                 data: {
-                    name: data.name
+                    name: data.name,
+                    teachers: {
+                        set: data.teachers.map(teacherId => ({ id: teacherId }))
+                    }
                 }
             })
             return {
@@ -19,10 +22,15 @@ export const createSubject = async (currentState: { success: boolean, error: boo
                 error: false
             }
         } else {
+            console.log({ data });
+
             await prisma.subject.create({
                 data: {
-                    name: data.name
-                }
+                    name: data.name,
+                    teachers: {
+                        connect: data.teachers.map(teacherId => ({ id: teacherId }))
+                    }
+                },
             })
             return {
                 success: true,
@@ -38,4 +46,27 @@ export const createSubject = async (currentState: { success: boolean, error: boo
 
     }
 
+}
+
+export const deleteSubject = async (currentState: { success: boolean, error: boolean }, data: FormData) => {
+    const id = data.get("id") as string
+    console.log({ id });
+
+    try {
+        await prisma.subject.delete({
+            where: {
+                id: parseInt(id)
+            }
+        })
+        return {
+            success: true,
+            error: false
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            error: true
+        }
+    }
 }
