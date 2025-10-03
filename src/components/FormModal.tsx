@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteSubject } from "@/lib/actions";
+import { deleteClass, deleteSubject } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -58,7 +58,7 @@ const forms: Forms = {
   student: (type, data) => <StudentForm type={type} data={data} />,
   parent: (type, data) => <ParentForm type={type} data={data} />,
   subject: (type, data, relatedData) => <SubjectForm type={type} data={data} relatedData={relatedData} />,
-  class: (type, data) => <ClassForm type={type} data={data} />,
+  class: (type, data, relatedData) => <ClassForm type={type} data={data} relatedData={relatedData} />,
   lesson: (type, data) => <LessonForm type={type} data={data} />,
   exam: (type, data) => <ExamForm type={type} data={data} />,
   assignment: (type, data) => <AssignmentForm type={type} data={data} />,
@@ -95,7 +95,7 @@ const FormModal = ({
     teacher: deleteSubject,
     student: deleteSubject,
     parent: deleteSubject,
-    class: deleteSubject,
+    class: deleteClass,
     lesson: deleteSubject,
     exam: deleteSubject,
     assignment: deleteSubject,
