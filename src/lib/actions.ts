@@ -108,7 +108,7 @@ export const createUpdateClass = async (currentState: { success: boolean, error:
 export const deleteClass = async (currentState: { success: boolean, error: boolean }, data: FormData) => {
     const id = data.get("id") as string
     try {
-        await prisma.subject.delete({
+        await prisma.class.delete({
             where: {
                 id: parseInt(id)
             }

@@ -33,10 +33,10 @@ const ClassForm = ({
     resolver: zodResolver(classSchema),
     defaultValues: {
       name: data?.name || "",
-      supervisorId: data?.supervisor || "",
+      supervisorId: data?.supervisorId || "",
       id: data?.id || undefined,
       capacity: data?.capacity || "",
-      gradeId: data?.grade || "",
+      gradeId: data?.gradeId || "",
     }
   });
   const [state, formAction] = useFormState(createUpdateClass, {
@@ -46,8 +46,6 @@ const ClassForm = ({
 
 
   const onSubmit = handleSubmit((formData) => {
-    console.log({ formData });
-
     formAction(formData)
   });
 
@@ -86,7 +84,7 @@ const ClassForm = ({
         </div>
         <div>
           <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Class Supervisor</label>
-          <select id="grades" {...register("supervisorId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" defaultValue={data?.supervisor}>
+          <select id="grades" {...register("supervisorId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
             <option value="" disabled>Choose a supervisor</option>
 
             {relatedData?.teachers?.map((teacher: any) => (
@@ -101,10 +99,10 @@ const ClassForm = ({
         </div>
         <div>
           <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Grades</label>
-          <select id="grades" {...register("gradeId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5">
+          <select id="grades" {...register("gradeId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
             <option value="" disabled>Choose a grade</option>
             {relatedData?.grades?.map((grade: any) => (
-              <option key={grade.id} value={grade.id}>
+              <option key={grade.id} value={grade.id} >
                 {grade.level}
               </option>
             ))}
