@@ -34,6 +34,10 @@ const TeacherForm = ({
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(teacherSchema),
+    defaultValues: {
+      subjects: data?.subjects?.map((subject: any) => subject.id),
+      classes: data?.classes?.map((cls: any) => cls.id),
+    }
   });
   const [img, setImg] = useState<any>();
   const [preview, setPreview] = useState<string>("");
@@ -60,6 +64,7 @@ const TeacherForm = ({
     }
   }, [state, router, type]);
 
+  console.log(data);
 
   return (
     <form method="POST" className="flex flex-col gap-8" onSubmit={onSubmit}>
@@ -83,7 +88,6 @@ const TeacherForm = ({
         <InputField
           label="Password"
           name="password"
-          // defaultValue={data?.password}
           register={register}
           error={errors?.password}
           placeholder="Password"
@@ -131,11 +135,20 @@ const TeacherForm = ({
           error={errors.address}
 
         />
+        {data && (
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors.id}
 
+          />
+        )}
         <InputField
           label="Birthday"
           name="birthday"
-          defaultValue={data?.birthday.toISOString()}
+          defaultValue={data?.birthday ? new Date(data.birthday).toISOString().split("T")[0] : ""}
           register={register}
           error={errors.birthday}
           placeholder="Birthday"
@@ -205,36 +218,38 @@ const TeacherForm = ({
         {({ open }) => {
           return (
             <div
-              className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
+              className="text-xs text-gray-500 flex items-center gap-2 w-56 h-full cursor-pointer"
               onClick={() => open()}
             >
 
-              {preview ?
+              {(preview || data?.image) ? (
                 <>
-                  <Image src={preview} alt="" className="w-12 h-12 rounded-full" width={60} height={60} />
+                  <Image
+                    src={preview || data?.image!}
+                    alt="Teacher photo"
+                    className="rounded-full w-14 h-14"
+                    width={60}
+                    height={60}
+                  />
                   <span>Change photo</span>
                 </>
-                :
+              ) : (
                 <>
-                  <Image src="/upload.png" alt="" width={28} height={28} />
+                  <Image src="/upload.png" alt="Upload" width={28} height={28} />
                   <span>Upload a photo</span>
-
                   {errors.image?.message && (
-                    <p className="text-xs text-red-400">
-                      {errors.image.message}
-                    </p>
+                    <p className="text-xs text-red-400">{errors.image.message}</p>
                   )}
                 </>
-
-              }
+              )}
 
 
             </div>
           );
         }}
       </CldUploadWidget>
-      {errors.root && (
-        <p className="text-xs text-red-400">{errors.root.message}</p>
+      {errors && (
+        <p className="text-xs text-red-400">{JSON.stringify(errors)}</p>
       )}
       <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}

@@ -132,11 +132,21 @@ export const deleteClass = async (currentState: { success: boolean, error: boole
 export const createUpdateTeacher = async (currentState: { success: boolean, error: boolean }, data: TeacherSchema) => {
     try {
         if (data.id) {
+            const clerk = await clerkClient();
+            const user = await clerk.users.updateUser(data.id, {
+                username: data.username,
+                firstName: data.name,
+                lastName: data.surname,
+            });
+            console.log(user.id);
+
+
             await prisma.teacher.update({
                 where: {
                     id: data.id
                 },
                 data: {
+                    id: user.id,
                     username: data.username,
                     name: data.name,
                     surname: data.surname,
@@ -147,7 +157,10 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                     sex: data.sex,
                     birthday: data.birthday,
                     subjects: {
-                        set: data.subjects?.map(subjectId => ({ id: subjectId }))
+                        set: data.subjects?.map((subjectId) => ({ id: subjectId }))
+                    },
+                    classes: {
+                        set: data.classes?.map((classId) => ({ id: classId }))
                     }
                 }
             })
@@ -155,6 +168,7 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                 success: true,
                 error: false
             }
+
         } else {
             const clerk = await clerkClient();
             const user = await clerk.users.createUser({
@@ -169,6 +183,7 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                 skipPasswordChecks: true,
                 skipPasswordRequirement: true
             });
+            console.log(user.id);
 
 
             await prisma.teacher.create({
@@ -185,6 +200,9 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                     birthday: data.birthday,
                     subjects: {
                         connect: data.subjects?.map((subjectId) => ({ id: subjectId }))
+                    },
+                    classes: {
+                        connect: data.classes?.map((classId) => ({ id: classId }))
                     }
                 }
             })

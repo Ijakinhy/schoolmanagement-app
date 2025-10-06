@@ -21,7 +21,7 @@ export const sexEnum = z.enum(["Male", "Famale"]);
 
 export const teacherSchema = z.object({
     id: z.string().optional(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(8, "Password must be at least 8 characters").or(z.literal("")),
     username: z.string().min(3, "Username must be at least 3 characters"),
     name: z.string().min(1, "Name is required"),
     surname: z.string().min(1, "Surname is required"),
