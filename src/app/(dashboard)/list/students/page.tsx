@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -90,10 +90,7 @@ const renderRow = async (student: StudentList) => (
           </button>
         </Link>
         {role === "admin" && (
-          // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-uiPurple">
-          //   <Image src="/delete.png" alt="" width={16} height={16} />
-          // </button>
-          <FormModal table="student" type="delete" id={student.id} />
+          <FormContainer table="student" type="delete" id={student.id} />
         )}
       </div>
     </td>
@@ -146,6 +143,9 @@ const StudentListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        createdAt: "desc",
+      }
     }),
     prisma.student.count({
       where: query,
@@ -167,10 +167,7 @@ const StudentListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-uiYellow">
-              //   <Image src="/plus.png" alt="" width={14} height={14} />
-              // </button>
-              <FormModal table="student" type="create" />
+              <FormContainer table="student" type="create" />
             )}
           </div>
         </div>

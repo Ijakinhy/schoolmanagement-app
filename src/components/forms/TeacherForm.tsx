@@ -64,8 +64,6 @@ const TeacherForm = ({
     }
   }, [state, router, type]);
 
-  console.log(data);
-
   return (
     <form method="POST" className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">

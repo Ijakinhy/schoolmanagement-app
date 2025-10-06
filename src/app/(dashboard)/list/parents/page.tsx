@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -10,7 +10,7 @@ import Image from "next/image";
 type ParentsList = Parent & {
   students: Student[];
 };
-const { role, currentUserId } = await getCurrentUserAndRole();
+const { role } = await getCurrentUserAndRole();
 const columns = [
   {
     header: "Info",
@@ -61,8 +61,8 @@ const renderRow = (item: ParentsList) => (
       <div className="flex items-center gap-2">
         {role === "admin" && (
           <>
-            <FormModal table="parent" type="update" data={item} />
-            <FormModal table="parent" type="delete" id={item.id} />
+            <FormContainer table="parent" type="update" data={item} />
+            <FormContainer table="parent" type="delete" id={item.id} />
           </>
         )}
       </div>
@@ -106,6 +106,9 @@ const ParentListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        createdAt: "desc",
+      }
     }),
     prisma.parent.count({
       where: query,
@@ -126,7 +129,7 @@ const ParentListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-uiYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormModal table="teacher" type="create" />}
+            {role === "admin" && <FormContainer table="parent" type="create" />}
           </div>
         </div>
       </div>
