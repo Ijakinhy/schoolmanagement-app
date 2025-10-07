@@ -2,162 +2,175 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import { lessonSchema, LessonSchema } from "@/lib/datasource";
+import MultiSelect from "../selectInput/SelectInput";
+import { useFormState } from "react-dom";
+import { createUpdateLesson } from "@/lib/actions";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
-const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters long!" })
-    .max(20, { message: "Username must be at most 20 characters long!" }),
-  email: z.string().email({ message: "Invalid email address!" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long!" }),
-  firstName: z.string().min(1, { message: "First name is required!" }),
-  lastName: z.string().min(1, { message: "Last name is required!" }),
-  phone: z.string().min(1, { message: "Phone is required!" }),
-  address: z.string().min(1, { message: "Address is required!" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
-  sex: z.enum(["male", "female"], { message: "Sex is required!" }),
-  img: z.instanceof(File, { message: "Image is required" }),
-});
 
-type Inputs = z.infer<typeof schema>;
 
 const LessonForm = ({
   type,
   data,
+  relatedData
 }: {
   type: "create" | "update";
-  data?: any;
+  data?: LessonSchema;
+  relatedData?: Record<string, any>;
 }) => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-  } = useForm<Inputs>({
-    resolver: zodResolver(schema),
+    reset
+  } = useForm<LessonSchema>({
+    resolver: zodResolver(lessonSchema),
+    defaultValues: {
+      classId: data?.classId,
+      teacherId: data?.teacherId,
+      subjectId: data?.subjectId,
+      day: data?.day,
+    }
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
+  const [state, formAction] = useFormState(createUpdateLesson, {
+    success: false,
+    error: false,
   });
+
+
+  const onSubmit = handleSubmit((formData) => {
+    formAction(formData);
+  });
+
+  const router = useRouter();
+  useEffect(() => {
+    if (state.success) {
+      toast(
+        `Lesson ${type === "create" ? "created" : "updated"} successfully`
+      );
+      reset()
+      router.refresh();
+    }
+  }, [state, router, type]);
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new lesson" : "Edit lesson"}
+        {type === "create" ? "Create a new lesson" : "Edit lesson details"}
       </h1>
       <span className="text-xs text-gray-400 font-medium">
-        Authentication Information
+        {type === "create" ? "Your are about to create a new lesson" : "Your are about to update a lesson"}
       </span>
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid  grid-cols-2 gap-4">
+        <div>
+          <InputField
+            label="Lesson name"
+            name="name"
+            placeholder="Class name"
+            defaultValue={data?.name}
+            register={register}
+            error={errors?.name}
+          />
+        </div>
         <InputField
-          label="Username"
-          name="username"
-          defaultValue={data?.username}
+          label=""
+          name="id"
+          placeholder="Class name"
+          defaultValue={data?.id?.toString()}
           register={register}
-          error={errors?.username}
+          error={errors?.id}
+          hidden
         />
-        <InputField
-          label="Email"
-          name="email"
-          defaultValue={data?.email}
-          register={register}
-          error={errors?.email}
-        />
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          defaultValue={data?.password}
-          register={register}
-          error={errors?.password}
-        />
-      </div>
-      <span className="text-xs text-gray-400 font-medium">
-        Personal Information
-      </span>
-      <div className="flex justify-between flex-wrap gap-4">
-        <InputField
-          label="First Name"
-          name="firstName"
-          defaultValue={data?.firstName}
-          register={register}
-          error={errors.firstName}
-        />
-        <InputField
-          label="Last Name"
-          name="lastName"
-          defaultValue={data?.lastName}
-          register={register}
-          error={errors.lastName}
-        />
-        <InputField
-          label="Phone"
-          name="phone"
-          defaultValue={data?.phone}
-          register={register}
-          error={errors.phone}
-        />
-        <InputField
-          label="Address"
-          name="address"
-          defaultValue={data?.address}
-          register={register}
-          error={errors.address}
-        />
-        <InputField
-          label="Blood Type"
-          name="bloodType"
-          defaultValue={data?.bloodType}
-          register={register}
-          error={errors.bloodType}
-        />
-        <InputField
-          label="Birthday"
-          name="birthday"
-          defaultValue={data?.birthday}
-          register={register}
-          error={errors.birthday}
-          type="date"
-        />
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Sex</label>
-          <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-            {...register("sex")}
-            defaultValue={data?.sex}
-          >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+        <div>
+          <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Choose a subject</label>
+          <select defaultValue={""} id="grades" {...register("subjectId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
+            <option value="" disabled >Choose a subject</option>
+            {relatedData?.subjects?.map((subject: any) => (
+              <option key={subject.id} value={subject.id} >
+                {subject.name}
+              </option>
+            ))}
           </select>
-          {errors.sex?.message && (
-            <p className="text-xs text-red-400">
-              {errors.sex.message.toString()}
-            </p>
+          {errors.subjectId && (
+            <p className="text-red-500">{errors.subjectId.message}</p>
           )}
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center">
-          <label
-            className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
-            htmlFor="img"
-          >
-            <Image src="/upload.png" alt="" width={28} height={28} />
-            <span>Upload a photo</span>
-          </label>
-          <input type="file" id="img" {...register("img")} className="hidden" />
-          {errors.img?.message && (
-            <p className="text-xs text-red-400">
-              {errors.img.message.toString()}
-            </p>
+        <div>
+          <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Choose a class</label>
+          <select defaultValue={""} id="grades" {...register("classId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
+            <option value="" disabled>Choose a class</option>
+            {relatedData?.classes?.map((cls: any) => (
+              <option key={cls.id} value={cls.id} >
+                {cls.name}
+              </option>
+            ))}
+          </select>
+          {errors.classId && (
+            <p className="text-red-500">{errors.classId.message}</p>
           )}
+        </div>
+        <div>
+          <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Choose a teacher</label>
+          <select id="grades" defaultValue={""} {...register("teacherId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
+            <option value="" disabled>Choose a class</option>
+            {relatedData?.teachers?.map((teacher: any) => (
+              <option key={teacher.id} value={teacher.id} >
+                {teacher.name + " " + teacher.surname}
+              </option>
+            ))}
+          </select>
+          {errors.teacherId && (
+            <p className="text-red-500">{errors.teacherId.message}</p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Choose a day</label>
+          <select id="grades" defaultValue={""} {...register("day")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
+            <option value="" disabled>Choose a day</option>
+            {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
+              <option key={day} value={day} >
+                {day.toUpperCase()}
+              </option>
+            ))}
+          </select>
+          {errors.day && (
+            <p className="text-red-500">{errors.day.message}</p>
+          )}
+        </div>
+
+
+        <div>
+          <InputField
+            label="Lesson start time"
+            name="start"
+            type="datetime-local"
+            placeholder="Lesson start time"
+            defaultValue={data?.start ? new Date(data.end).toISOString().slice(0, 16) : ""}
+            register={register}
+            error={errors?.start}
+          />
+        </div>
+        <div>
+          <InputField
+            label="Lesson end time"
+            name="end"
+            type="datetime-local"
+            placeholder="Lesson end time"
+            defaultValue={data?.end ? new Date(data.end).toISOString().slice(0, 16) : ""}
+            register={register}
+            error={errors?.end}
+          />
         </div>
       </div>
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      {errors.root && <p className="text-red-500">{errors.root.message}</p>}
+      <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "update"}
       </button>
     </form>

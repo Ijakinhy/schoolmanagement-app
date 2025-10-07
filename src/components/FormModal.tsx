@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteClass, deleteParent, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
+import { deleteClass, deleteLesson, deleteParent, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -59,7 +59,7 @@ const forms: Forms = {
   parent: (type, data, relatedData) => <ParentForm type={type} data={data} relatedData={relatedData} />,
   subject: (type, data, relatedData) => <SubjectForm type={type} data={data} relatedData={relatedData} />,
   class: (type, data, relatedData) => <ClassForm type={type} data={data} relatedData={relatedData} />,
-  lesson: (type, data) => <LessonForm type={type} data={data} />,
+  lesson: (type, data, relatedData) => <LessonForm type={type} data={data} relatedData={relatedData} />,
   exam: (type, data) => <ExamForm type={type} data={data} />,
   assignment: (type, data) => <AssignmentForm type={type} data={data} />,
   result: (type, data) => <ResultForm type={type} data={data} />,
@@ -77,16 +77,16 @@ const FormModal = ({
   relatedData
 }: FormContainerProps & { relatedData?: Record<string, any> }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  // const bgColor =
-  //   type === "create"
-  //     ? "bg-uiYellow"
-  //     : type === "update"
-  //       ? table === "teacher"
-  //         ? "bg-uiYellow"
-  //         : "bg-uiSky"
-  //       : "bg-uiPurple";
+  const bgColor =
+    type === "create"
+      ? "bg-uiYellow"
+      : type === "update"
+        ? table === "teacher" || table === "student"
+          ? "bg-uiYellow"
+          : "bg-uiSky"
+        : "bg-uiPurple";
 
-  const bgColor = type === "create" ? "bg-uiYellow" : "bg-uiYellow";
+  // const bgColor = type === "create" ? "bg-uiYellow" : "bg-uiYellow";
 
   const [open, setOpen] = useState(false);
   type DeleteActions = {
@@ -98,7 +98,7 @@ const FormModal = ({
     student: deleteStudent,
     parent: deleteParent,
     class: deleteClass,
-    lesson: deleteSubject,
+    lesson: deleteLesson,
     exam: deleteSubject,
     assignment: deleteSubject,
     result: deleteSubject,

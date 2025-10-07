@@ -1,3 +1,4 @@
+import { Day } from "@/generated/prisma";
 import z from "zod";
 
 export const subjectSchema = z.object({
@@ -92,3 +93,16 @@ export const parentSchema = z.object({
 
 });
 export type ParentSchema = z.infer<typeof parentSchema>;
+
+export const lessonSchema = z.object({
+    id: z.coerce.number().optional(),
+    name: z.string().min(1, "Lesson name is required"),
+    day: z.nativeEnum(Day),
+    start: z.coerce.date({ required_error: "Start time is required" }),
+    end: z.coerce.date({ required_error: "End time is required" }),
+    subjectId: z.coerce.number({ required_error: "Subject is required" }),
+    classId: z.coerce.number({ required_error: "Class is required" }),
+    teacherId: z.string({ required_error: "Teacher is required" }),
+});
+
+export type LessonSchema = z.infer<typeof lessonSchema>;

@@ -1,6 +1,6 @@
 "use server"
 import { UseFormResetField } from "react-hook-form"
-import { ClassSchema, ParentSchema, StudentSchema, SubjectSchema, TeacherSchema } from "./datasource"
+import { ClassSchema, LessonSchema, ParentSchema, StudentSchema, SubjectSchema, TeacherSchema } from "./datasource"
 import { prisma } from "./prisma"
 import { clerkClient } from "@clerk/nextjs/server"
 
@@ -451,3 +451,82 @@ export const deleteParent = async (currentState: { success: boolean, error: bool
         }
     }
 }
+
+
+// Lesson 
+
+export const createUpdateLesson = async (currentState: { success: boolean, error: boolean }, data: LessonSchema) => {
+    try {
+        if (data.id) {
+            await prisma.lesson.update({
+                where: {
+                    id: data.id
+                },
+                data: {
+                    day: data.day,
+                    start: data.start,
+                    end: data.end,
+                    classId: data.classId,
+                    teacherId: data.teacherId,
+                    name: data.name,
+                    subjectId: data.subjectId
+                }
+            })
+            return {
+                success: true,
+                error: false
+            }
+
+        } else {
+
+
+            await prisma.lesson.create({
+                data: {
+                    day: data.day,
+                    start: data.start,
+                    end: data.end,
+                    classId: data.classId,
+                    teacherId: data.teacherId,
+                    name: data.name,
+                    subjectId: data.subjectId
+
+                }
+
+            })
+            return {
+                success: true,
+                error: false
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            error: true
+        }
+
+    }
+
+}
+
+export const deleteLesson = async (currentState: { success: boolean, error: boolean }, data: FormData) => {
+    const id = data.get("id") as string
+    try {
+        await prisma.lesson.delete({
+            where: {
+                id: parseInt(id)
+            }
+        })
+        return {
+            success: true,
+            error: false
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            error: true
+        }
+    }
+}
+
