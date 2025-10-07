@@ -152,7 +152,7 @@ const LessonForm = ({
             name="start"
             type="datetime-local"
             placeholder="Lesson start time"
-            defaultValue={data?.start ? new Date(data.end).toISOString().slice(0, 16) : ""}
+            defaultValue={data?.start ? new Date(data.start).toISOString().slice(0, 16) : ""}
             register={register}
             error={errors?.start}
           />
