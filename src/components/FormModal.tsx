@@ -77,14 +77,16 @@ const FormModal = ({
   relatedData
 }: FormContainerProps & { relatedData?: Record<string, any> }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const bgColor =
-    type === "create"
-      ? "bg-uiYellow"
-      : type === "update"
-        ? table === "teacher"
-          ? "bg-uiYellow"
-          : "bg-uiSky"
-        : "bg-uiPurple";
+  // const bgColor =
+  //   type === "create"
+  //     ? "bg-uiYellow"
+  //     : type === "update"
+  //       ? table === "teacher"
+  //         ? "bg-uiYellow"
+  //         : "bg-uiSky"
+  //       : "bg-uiPurple";
+
+  const bgColor = type === "create" ? "bg-uiYellow" : "bg-uiYellow";
 
   const [open, setOpen] = useState(false);
   type DeleteActions = {

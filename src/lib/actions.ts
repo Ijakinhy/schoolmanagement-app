@@ -23,7 +23,6 @@ export const createSubject = async (currentState: { success: boolean, error: boo
                 error: false
             }
         } else {
-            console.log({ data });
 
             await prisma.subject.create({
                 data: {
@@ -85,7 +84,6 @@ export const createUpdateClass = async (currentState: { success: boolean, error:
                 error: false
             }
         } else {
-            console.log({ data });
 
             await prisma.class.create({
                 data
@@ -138,8 +136,6 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                 firstName: data.name,
                 lastName: data.surname,
             });
-            console.log(user.id);
-
 
             await prisma.teacher.update({
                 where: {
@@ -183,7 +179,6 @@ export const createUpdateTeacher = async (currentState: { success: boolean, erro
                 skipPasswordChecks: true,
                 skipPasswordRequirement: true
             });
-            console.log(user.id);
 
 
             await prisma.teacher.create({
@@ -255,8 +250,6 @@ export const createUpdateStudent = async (currentState: { success: boolean, erro
                 firstName: data.name,
                 lastName: data.surname,
             });
-            console.log(user.id);
-
 
             await prisma.student.update({
                 where: {
@@ -337,7 +330,7 @@ export const deleteStudent = async (currentState: { success: boolean, error: boo
     const id = data.get("id") as string
     try {
         (await clerkClient()).users.deleteUser(id)
-        await prisma.teacher.delete({
+        await prisma.student.delete({
             where: {
                 id: id
             }

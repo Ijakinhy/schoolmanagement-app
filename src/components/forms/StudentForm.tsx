@@ -31,6 +31,12 @@ const StudentForm = ({
     reset
   } = useForm<StudentSchema>({
     resolver: zodResolver(studentSchema),
+    defaultValues: {
+      classId: data?.classId,
+      gradeId: data?.gradeId,
+      parentId: data?.parentId,
+      sex: data?.sex
+    }
   });
   const [img, setImg] = useState<any>();
   const [preview, setPreview] = useState<string>("");
@@ -42,7 +48,7 @@ const StudentForm = ({
 
 
   const onSubmit = handleSubmit((formData) => {
-    formAction(formData);
+    formAction({ ...formData, image: img?.secure_url });
   });
 
   const router = useRouter();
@@ -138,7 +144,7 @@ const StudentForm = ({
             defaultValue={data?.id}
             register={register}
             error={errors.id}
-
+            hidden
           />
         )}
         <div>
@@ -251,9 +257,9 @@ const StudentForm = ({
           );
         }}
       </CldUploadWidget>
-      {errors && (
+      {/* {errors && (
         <p className="text-xs text-red-400">{JSON.stringify(errors)}</p>
-      )}
+      )} */}
       <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>
