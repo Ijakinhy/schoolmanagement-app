@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -25,6 +25,9 @@ const { currentUserId, role } = await getCurrentUserAndRole();
 
 const columns = [
   {
+    header: "Title",
+    accessor: "title",
+  }, {
     header: "Subject Name",
     accessor: "name",
   },
@@ -50,13 +53,12 @@ const columns = [
 
 const renderRow = async (item: AssignmentList) => {
 
-
-
   return (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
     >
+      <td className="">{item.title}</td>
       <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
       <td>{item.lesson.class.name}</td>
       <td className="hidden md:table-cell">{item.lesson.teacher.name + " " + item.lesson.teacher.surname}</td>
@@ -74,8 +76,8 @@ const renderRow = async (item: AssignmentList) => {
         <div className="flex items-center gap-2">
           {(role === "admin" || role === "teacher") && (
             <>
-              <FormModal table="assignment" type="update" data={item} />
-              <FormModal table="assignment" type="delete" id={item.id} />
+              <FormContainer table="assignment" type="update" data={item} />
+              <FormContainer table="assignment" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -183,11 +185,17 @@ const AssignmentListPage = async ({
             teacher: { select: { name: true, surname: true } },
             class: { select: { name: true } },
           }
+        },
+        results: {
+          select: { id: true, score: true, student: { select: { name: true, surname: true, id: true } } }
         }
       },
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        id: "desc",
+      }
     }),
     prisma.assignment.count({
       where: query,
@@ -210,7 +218,7 @@ const AssignmentListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="assignment" type="create" />
+              <FormContainer table="assignment" type="create" />
             )}
           </div>
         </div>
