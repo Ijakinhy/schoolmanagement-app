@@ -128,3 +128,37 @@ export const assignmentSchema = z.object({
 });
 
 export type AssignmentSchema = z.infer<typeof assignmentSchema>;
+
+export const resultSchema = z
+    .object({
+        id: z.coerce.number().optional(),
+        score: z.coerce.number({ required_error: "Score is required" }).min(0, "Score must be at least 0").max(100, "Score must be at most 100"),
+        assignmentId: z.coerce
+            .number()
+            .optional().nullable(),
+        examId: z
+            .coerce.number()
+            .optional().nullable(),
+        studentId: z.string({
+            required_error: "Student is required",
+        }),
+    }).superRefine((data, ctx) => {
+        // Case: both are empty or both are filled
+        if (
+            (!data.assignmentId && !data.examId) ||
+            (data.assignmentId && data.examId)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["assignmentId"],
+                message: "Select either assignment or exam, not both.",
+            });
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["examId"],
+                message: "Select either assignment or exam, not both.",
+            });
+        }
+    });
+
+export type ResultSchema = z.infer<typeof resultSchema>;

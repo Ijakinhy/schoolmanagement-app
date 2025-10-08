@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -16,9 +16,9 @@ type ResultList = Prisma.ResultGetPayload<{
         surname: true;
       };
     };
-
-    assignment: {
+    exam: {
       select: {
+        startTime: true;
         lesson: {
           select: {
             subject: {
@@ -29,6 +29,33 @@ type ResultList = Prisma.ResultGetPayload<{
             teacher: {
               select: {
                 name: true;
+                surname: true;
+              };
+            };
+            class: {
+              select: {
+                name: true;
+              };
+            };
+          };
+        };
+      }
+    }
+
+    assignment: {
+      select: {
+        startDate: true;
+        lesson: {
+          select: {
+            subject: {
+              select: {
+                name: true;
+              };
+            };
+            teacher: {
+              select: {
+                name: true;
+                surname: true;
               };
             };
             class: {
@@ -39,7 +66,7 @@ type ResultList = Prisma.ResultGetPayload<{
           };
         };
       };
-    };
+    }
   };
 }>;
 
@@ -97,37 +124,40 @@ const columns = [
     : []),
 ];
 
-const renderRow = (item: Results) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.title}</td>
-    <td className="hidden md:table-cell">
-      {item.studentName + " " + item.studentSurname}
-    </td>
-    <td className="hidden md:table-cell">{item.score}</td>
-    <td className="hidden md:table-cell">{item.teacherName}</td>
-    <td className="hidden md:table-cell">{item.className}</td>
-    <td className="hidden md:table-cell">
-      {new Date(item.startTime).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {(role === "admin" || role === "teacher") && (
-          <>
-            <FormModal table="result" type="update" data={item} />
-            <FormModal table="result" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
+const renderRow = (item: ResultList) => {
+  // console.log({ item })
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">{item?.assignment?.lesson.subject.name ?? item.exam?.lesson.subject.name}</td>
+      <td className="hidden md:table-cell">
+        {item?.student?.name + " " + item?.student?.surname}
+      </td>
+      <td className="hidden md:table-cell">{item?.score}</td>
+      <td className="hidden md:table-cell">{item.assignment ? item?.assignment?.lesson.teacher.name + " " + item?.assignment?.lesson.teacher.surname : item?.exam?.lesson.teacher.name + " " + item?.exam?.lesson.teacher.surname}</td>
+      <td className="hidden md:table-cell">{item?.assignment ? item?.assignment?.lesson.class.name : item?.exam?.lesson.class.name}</td>
+      <td className="hidden md:table-cell">
+        {new Date(item?.exam?.startTime ?? item?.assignment?.startDate ?? Date.now()).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {(role === "admin" || role === "teacher") && (
+            <>
+              <FormContainer table="result" type="update" data={item} />
+              <FormContainer table="result" type="delete" id={item?.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+};
 const ResultListPage = async ({
   params,
   searchParams,
@@ -317,11 +347,15 @@ const ResultListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        id: "desc",
+      }
     }),
     prisma.result.count({
       where: query,
     }),
   ]);
+  // console.log(data);
 
   const results = data.map((item) => {
     const assessment = item.assignment || item.exam;
@@ -342,6 +376,8 @@ const ResultListPage = async ({
       startTime: isExam ? assessment.startTime : item.assignment?.startDate,
     };
   });
+  // console.log(results);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -357,13 +393,13 @@ const ResultListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="result" type="create" />
+              <FormContainer table="result" type="create" />
             )}
           </div>
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={results} />
+      <Table columns={columns} renderRow={renderRow} data={data} />
       {/* PAGINATION */}
       <Pagination count={count} page={p} />
     </div>
