@@ -246,9 +246,6 @@ const TeacherForm = ({
           );
         }}
       </CldUploadWidget>
-      {errors && (
-        <p className="text-xs text-red-400">{JSON.stringify(errors)}</p>
-      )}
       <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>

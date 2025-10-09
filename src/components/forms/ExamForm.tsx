@@ -49,7 +49,7 @@ const ExameForm = ({
   useEffect(() => {
     if (state.success) {
       toast(
-        `Lesson ${type === "create" ? "created" : "updated"} successfully`
+        `Exam ${type === "create" ? "created" : "updated"} successfully`
       );
       reset()
       router.refresh();
@@ -59,11 +59,9 @@ const ExameForm = ({
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new lesson" : "Edit lesson details"}
+        {type === "create" ? "Create a new Exam" : "Edit Exam details"}
       </h1>
-      <span className="text-xs text-gray-400 font-medium">
-        {type === "create" ? "Your are about to create a new lesson" : "Your are about to update a lesson"}
-      </span>
+
       <div className="grid  grid-cols-2 gap-4">
         <div>
           <InputField

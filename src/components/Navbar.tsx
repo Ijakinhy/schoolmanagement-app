@@ -3,9 +3,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import React from "react";
 
-const Navbar = async() => {
-  const  user =  await currentUser();
-  const role = (user?.publicMetadata as {role:string}).role
+const Navbar = async () => {
+  const user = await currentUser();
+  const role = (user?.publicMetadata as { role: string }).role
   return (
     <div className="flex items-center justify-between p-4">
       {/* SEARCH BAR */}
@@ -29,7 +29,7 @@ const Navbar = async() => {
           </div>
         </div>
         <div className="flex flex-col">
-          <span className="text-xs leading-3 font-medium">John Doe</span>
+          <span className="text-xs leading-3 font-medium">{user?.firstName + " " + user?.fullName}</span>
           <span className="text-[10px] text-gray-500 text-right">{role}</span>
         </div>
         {/* <Image
@@ -39,7 +39,7 @@ const Navbar = async() => {
           height={36}
           className="rounded-full"
         /> */}
-        <UserButton defaultOpen={false}  />
+        <UserButton defaultOpen={false} />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react'
 import FormModal from './FormModal';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserAndRole } from '@/lib/utils';
 
 
 export type FormContainerProps = {
@@ -28,6 +29,7 @@ const FormContainer = async ({
     data,
     id,
 }: FormContainerProps) => {
+    const { currentUserId, role } = await getCurrentUserAndRole()
 
     let relatedData = {}
 
@@ -109,6 +111,9 @@ const FormContainer = async ({
             case "exam":
                 const examLessons = await prisma.lesson.findMany({
                     select: { id: true, name: true },
+                    where: {
+                        ...(role === "teacher" ? { teacher: { id: currentUserId } } : {})
+                    }
                 })
                 const results = await prisma.result.findMany({
                     select: { id: true, student: { select: { name: true, surname: true } }, score: true },
@@ -150,6 +155,29 @@ const FormContainer = async ({
                     exams
                 }
                 break;
+            case "attendance":
+
+                const attendanceLessons = await prisma.lesson.findMany({
+                    select: { id: true, name: true },
+                    where: {
+                        ...(role === "teacher" ? { teacher: { id: currentUserId } } : {})
+                    }
+                })
+                const allStudents = await prisma.student.findMany({
+                    select: { id: true, name: true, surname: true },
+                    where: role === "teacher" ? {
+                        OR: [
+                            { class: { supervisorId: currentUserId } },
+                            { class: { lessons: { some: { teacher: { id: currentUserId } } } } }
+                        ]
+                    } : {},
+                })
+
+                relatedData = {
+                    lessons: attendanceLessons,
+                    students: allStudents
+                }
+                break
             default:
                 break;
         }

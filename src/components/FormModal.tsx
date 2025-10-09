@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteAssignment, deleteClass, deleteExam, deleteLesson, deleteParent, deleteResult, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
+import { deleteAssignment, deleteAttendance, deleteClass, deleteExam, deleteLesson, deleteParent, deleteResult, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -43,7 +43,7 @@ const ResultForm = dynamic(() => import("./forms/ResultForm"), {
 const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
-const AttendanceForm = dynamic(() => import("./forms/AssignmentForm"), {
+const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
@@ -63,7 +63,7 @@ const forms: Forms = {
   exam: (type, data, relatedData) => <ExamForm type={type} data={data} relatedData={relatedData} />,
   assignment: (type, data, relatedData) => <AssignmentForm type={type} data={data} relatedData={relatedData} />,
   result: (type, data, relatedData) => <ResultForm type={type} data={data} relatedData={relatedData} />,
-  attendance: (type, data) => <AttendanceForm type={type} data={data} />,
+  attendance: (type, data, relatedData) => <AttendanceForm type={type} data={data} relatedData={relatedData} />,
   event: (type, data) => <EventForm type={type} data={data} />,
   announcement: (type, data) => <AnnouncementForm type={type} data={data} />,
 };
@@ -102,7 +102,7 @@ const FormModal = ({
     exam: deleteExam,
     assignment: deleteAssignment,
     result: deleteResult,
-    attendance: deleteSubject,
+    attendance: deleteAttendance,
     event: deleteSubject,
     announcement: deleteSubject,
     subject: deleteSubject

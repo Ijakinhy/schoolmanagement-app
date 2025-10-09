@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -83,8 +83,8 @@ const renderRow = async (item: AttendanceList) => {
                 <div className="flex items-center gap-2">
                     {(role === "admin" || role === "teacher") && (
                         <>
-                            <FormModal table="assignment" type="update" data={item} />
-                            <FormModal table="assignment" type="delete" id={item.id} />
+                            <FormContainer table="attendance" type="update" data={item} />
+                            <FormContainer table="attendance" type="delete" id={item.id} />
                         </>
                     )}
                 </div>
@@ -198,6 +198,9 @@ const AttendanceListPage = async ({
             where: query,
             take: ITEM_PER_PAGE,
             skip: ITEM_PER_PAGE * (p - 1),
+            orderBy: {
+                id: "desc",
+            }
         }),
         prisma.attendance.count({
             where: query,
@@ -220,7 +223,8 @@ const AttendanceListPage = async ({
                             <Image src="/sort.png" alt="" width={14} height={14} />
                         </button>
                         {(role === "admin" || role === "teacher") && (
-                            <FormModal table="assignment" type="create" />
+                            <FormContainer table="attendance" type="create" />
+
                         )}
                     </div>
                 </div>

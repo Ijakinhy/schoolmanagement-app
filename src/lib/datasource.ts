@@ -162,3 +162,13 @@ export const resultSchema = z
     });
 
 export type ResultSchema = z.infer<typeof resultSchema>;
+
+export const attendanceSchema = z.object({
+    id: z.coerce.number().optional(),
+    date: z.coerce.date({ required_error: "Date is required" }),
+    present: z.coerce.boolean({ required_error: "Presence status is required" }),
+    lessonId: z.coerce.number({ required_error: "Lesson is required" }),
+    studentId: z.string({ required_error: "Student is required" }),
+});
+
+export type AttendanceSchema = z.infer<typeof attendanceSchema>;

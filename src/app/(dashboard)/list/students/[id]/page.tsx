@@ -1,12 +1,15 @@
 import Announcements from "@/components/Announcements";
+import BigCalendarContainer from "@/components/BigCalendarContainer";
 import BigCalendar from "@/components/BigCalender";
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
+import StudentAttendanceCard from "@/components/StudentAttendanceCard";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
   const { role } = await getCurrentUserAndRole();
@@ -18,11 +21,15 @@ const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
     include: {
       class: {
         select: {
+          _count: {
+            select: {
+              lessons: true
+            }
+          },
           id: true,
           name: true
         }
       },
-      attendance: true,
       grade: true
     }
   })
@@ -81,20 +88,11 @@ const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
           {/* SMALL CARDS */}
           <div className="flex-1 flex gap-4 justify-between flex-wrap">
             {/* CARD */}
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%] xl:w-[45%] 2xl:w-[48%]">
-              <Image
-                src="/singleAttendance.png"
-                alt=""
-                width={24}
-                height={24}
-                className="w-6 h-6"
-              />
-              <div className="">
 
-                <h1 className="text-xl font-semibold">{student?.attendance.length ? Math.ceil((student?.attendance.length / 180) * 100) : 0}</h1>
-                <span className="text-sm text-gray-400">Attendance</span>
-              </div>
-            </div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <StudentAttendanceCard id={params.id} />
+            </Suspense>
+
             {/* CARD */}
             <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image
@@ -105,7 +103,7 @@ const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
                 className="w-6 h-6"
               />
               <div className="">
-                <h1 className="text-xl font-semibold">{student?.grade.level}</h1>
+                <h1 className="text-xl font-semibold">{student?.grade.level}th</h1>
                 <span className="text-sm text-gray-400">Grade</span>
               </div>
             </div>
@@ -119,7 +117,7 @@ const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
                 className="w-6 h-6"
               />
               <div className="">
-                <h1 className="text-xl font-semibold">18</h1>
+                <h1 className="text-xl font-semibold">{student?.class._count.lessons}</h1>
                 <span className="text-sm text-gray-400">Lessons</span>
               </div>
             </div>
@@ -142,7 +140,8 @@ const SingleStudentPage = async ({ params }: { params: { id: string } }) => {
         {/* BOTTOM */}
         <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
           <h1>Student&apos;s Schedule</h1>
-          <BigCalendar />
+          {student?.class.id && <BigCalendarContainer type="classId" id={student?.class.id} />}
+
         </div>
       </div>
       {/* RIGHT */}
