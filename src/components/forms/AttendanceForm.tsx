@@ -76,20 +76,7 @@ const AttendaceForm = ({
             type="datetime-local"
           />
         </div>
-        {/* <div>
-          <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Student name</label>
-          <select defaultValue={""} id="grades" {...register("studentId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
-            <option disabled className="text-gray-400" >Choose a lesson</option>
-            {relatedData?.students?.map((std: any) => (
-              <option key={std.id} value={std.id} >
-                {std.name + " " + std.surname}
-              </option>
-            ))}
-          </select>
-          {errors.studentId && (
-            <p className="text-red-500">{errors.studentId.message}</p>
-          )}
-        </div> */}
+
         <InputField
           label=""
           name="id"
@@ -116,7 +103,7 @@ const AttendaceForm = ({
         <div>
           <label htmlFor="grades" className="block mb-2 text-xs text-gray-500 ">Student Name</label>
           <select defaultValue={""} id="grades" {...register("studentId")} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500  block w-full p-2.5" >
-            <option className="text-gray-400" >Choose an exam</option>
+            <option className="text-gray-400" >Choose an student</option>
             {relatedData?.students?.map((std: any) => (
               <option key={std.id} value={std.id} >
                 {std.name + " " + std.surname}

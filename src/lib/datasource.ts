@@ -172,3 +172,18 @@ export const attendanceSchema = z.object({
 });
 
 export type AttendanceSchema = z.infer<typeof attendanceSchema>;
+
+export const eventSchema = z.object({
+    id: z.coerce.number().optional(),
+    title: z.string().min(2, "Title must be at least 2 characters long"),
+    description: z.string({ required_error: "Description is required" }).min(5, "Description must be at least 5 characters long"),
+    classId: z.coerce.number().optional().nullable(),
+    startTime: z.coerce.date({ required_error: "Start time is required" }),
+    endTime: z.coerce.date({ required_error: "End time is required" }),
+})
+    .refine((data) => data.endTime > data.startTime, {
+        message: "End time must be after start time",
+        path: ["endTime"],
+    });
+
+export type EventSchema = z.infer<typeof eventSchema>;

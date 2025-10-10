@@ -1,6 +1,6 @@
 "use server"
 import { UseFormResetField } from "react-hook-form"
-import { AssignmentSchema, AttendanceSchema, ClassSchema, ExamSchema, LessonSchema, ParentSchema, ResultSchema, StudentSchema, SubjectSchema, TeacherSchema } from "./datasource"
+import { AssignmentSchema, AttendanceSchema, ClassSchema, EventSchema, ExamSchema, LessonSchema, ParentSchema, ResultSchema, StudentSchema, SubjectSchema, TeacherSchema } from "./datasource"
 import { prisma } from "./prisma"
 import { clerkClient } from "@clerk/nextjs/server"
 
@@ -791,6 +791,69 @@ export const deleteAttendance = async (currentState: { success: boolean, error: 
     const id = data.get("id") as string
     try {
         await prisma.attendance.delete({
+            where: {
+                id: parseInt(id)
+            }
+        })
+        return {
+            success: true,
+            error: false
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            error: true
+        }
+    }
+}
+
+// Event
+export const createUpdateEvent = async (currentState: { success: boolean, error: boolean }, data: EventSchema) => {
+    try {
+        if (data.id) {
+            await prisma.event.update({
+                where: {
+                    id: data.id
+                },
+                data
+            })
+            return {
+                success: true,
+                error: false
+            }
+
+        } else {
+
+            const res = await prisma.event.create({
+                data: {
+                    title: data.title,
+                    description: data.description,
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    classId: data.classId
+                }
+            })
+            return {
+                success: true,
+                error: false
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            error: true
+        }
+
+    }
+
+}
+
+export const deleteEvent = async (currentState: { success: boolean, error: boolean }, data: FormData) => {
+    const id = data.get("id") as string
+    try {
+        await prisma.event.delete({
             where: {
                 id: parseInt(id)
             }
