@@ -62,8 +62,8 @@ const EventForm = ({
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
         {type === "create"
-          ? "Create a new attendace"
-          : "Edit attendace details"}
+          ? "Create a new event"
+          : "Edit event details"}
       </h1>
       <div className="grid  grid-cols-2 gap-4">
         <div>

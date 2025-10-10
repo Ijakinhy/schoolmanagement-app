@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -59,8 +59,8 @@ const renderRow = async (item: AnnouncementList) => {
         <div className="flex items-center gap-2">
           {role === "admin" && (
             <>
-              <FormModal table="announcement" type="update" data={item} />
-              <FormModal table="announcement" type="delete" id={item.id} />
+              <FormContainer table="announcement" type="update" data={item} />
+              <FormContainer table="announcement" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -105,10 +105,12 @@ const AnnouncementListPage = async ({
     parent: { students: { some: { parentId: currentUserId } } },
   };
 
-  query.OR = [
-    { classId: null },
-    { class: roleConditions[role as keyof typeof roleConditions] || {} },
-  ];
+  if (role !== "admin") {
+    query.OR = [
+      { classId: null },
+      { class: roleConditions[role as keyof typeof roleConditions] || {} },
+    ];
+  }
 
   // GET DATA
   const [announcements, count] = await prisma.$transaction([
@@ -123,6 +125,9 @@ const AnnouncementListPage = async ({
       where: query,
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        date: "desc",
+      }
     }),
     prisma.announcement.count({
       where: query,
@@ -146,7 +151,7 @@ const AnnouncementListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              <FormModal table="announcement" type="create" />
+              <FormContainer table="announcement" type="create" />
             )}
           </div>
         </div>

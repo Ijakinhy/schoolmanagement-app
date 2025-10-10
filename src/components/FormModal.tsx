@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteAssignment, deleteAttendance, deleteClass, deleteEvent, deleteExam, deleteLesson, deleteParent, deleteResult, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
+import { deleteAnnouncement, deleteAssignment, deleteAttendance, deleteClass, deleteEvent, deleteExam, deleteLesson, deleteParent, deleteResult, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -65,7 +65,7 @@ const forms: Forms = {
   result: (type, data, relatedData) => <ResultForm type={type} data={data} relatedData={relatedData} />,
   attendance: (type, data, relatedData) => <AttendanceForm type={type} data={data} relatedData={relatedData} />,
   event: (type, data, relatedData) => <EventForm type={type} data={data} relatedData={relatedData} />,
-  announcement: (type, data) => <AnnouncementForm type={type} data={data} />,
+  announcement: (type, data, relatedData) => <AnnouncementForm type={type} relatedData={relatedData} data={data} />,
 };
 
 
@@ -104,7 +104,7 @@ const FormModal = ({
     result: deleteResult,
     attendance: deleteAttendance,
     event: deleteEvent,
-    announcement: deleteSubject,
+    announcement: deleteAnnouncement,
     subject: deleteSubject
   };
   const [formState, formAction] = useFormState(deleteActionsMap[table], { success: false, error: false })
