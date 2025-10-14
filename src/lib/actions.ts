@@ -280,34 +280,34 @@ export const createUpdateStudent = async (currentState: { success: boolean, erro
             }
 
         } else {
-            // const clerk = await clerkClient();
-            // const user = await clerk.users.createUser({
-            //     username: data.username,
-            //     firstName: data.name,
-            //     lastName: data.surname,
-            //     password: data.password,
-            //     publicMetadata: {
-            //         role: "student",
-            //     },
-            //     skipLegalChecks: true,
-            //     skipPasswordChecks: true,
-            //     skipPasswordRequirement: true
-            // });
-            const res = await auth.api.createUser({
-                body: {
-                    email: data.email!,
-                    password: data.password,
-                    name: data.name,
-                    data: {
-                        role: "student",
-                    }
-                }
-            })
+            const clerk = await clerkClient();
+            const user = await clerk.users.createUser({
+                username: data.username,
+                firstName: data.name,
+                lastName: data.surname,
+                password: data.password,
+                publicMetadata: {
+                    role: "student",
+                },
+                skipLegalChecks: true,
+                skipPasswordChecks: true,
+                skipPasswordRequirement: true
+            });
+            // const res = await auth.api.createUser({
+            //     body: {
+            //         email: data.email!,
+            //         password: data.password,
+            //         name: data.name,
+            //         data: {
+            //             role: "student",
+            //         }
+            //     }
+            // })
 
 
             await prisma.student.create({
                 data: {
-                    id: res.user.id,
+                    id: user.id,
                     username: data.username,
                     name: data.name,
                     surname: data.surname,
