@@ -1,6 +1,7 @@
 import { getCurrentUserAndRole } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const menuItems = [
   {
@@ -119,6 +120,10 @@ const menuItems = [
 
 const Menu = async () => {
   const { role } = await getCurrentUserAndRole();
+
+  if (!role) {
+    redirect("/login")
+  }
 
 
   return (

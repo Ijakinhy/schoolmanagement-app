@@ -19,81 +19,52 @@ type EventList = Prisma.EventGetPayload<{
   };
 }>;
 
-const { role, currentUserId } = await getCurrentUserAndRole();
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Start Time",
-    accessor: "startTime",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "End Time",
-    accessor: "endTime",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-      {
-        header: "Actions",
-        accessor: "action",
-      },
-    ]
-    : []),
-];
 
-const renderRow = (item: EventList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.title}</td>
-    <td>{item.class?.name || '-'}</td>
-    <td className="hidden md:table-cell">
-      {new Date(item.startTime).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })}
-    </td>
-    <td className="hidden md:table-cell">
-      {new Date(item.startTime).toLocaleDateString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}
-    </td>
-    <td className="hidden md:table-cell">
-      {new Date(item.endTime).toLocaleDateString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-            <FormContainer table="event" type="update" data={item} />
-            <FormContainer table="event" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
+
+const renderRow = async (item: EventList) => {
+  const { role, } = await getCurrentUserAndRole();
+
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">{item.title}</td>
+      <td>{item.class?.name || '-'}</td>
+      <td className="hidden md:table-cell">
+        {new Date(item.startTime).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Date(item.startTime).toLocaleDateString("en-US", {
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        })}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Date(item.endTime).toLocaleDateString("en-US", {
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        })}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {role === "admin" && (
+            <>
+              <FormContainer table="event" type="update" data={item} />
+              <FormContainer table="event" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+};
 
 const EventListPage = async ({
   params,
@@ -103,7 +74,40 @@ const EventListPage = async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
-
+  const { role, currentUserId } = await getCurrentUserAndRole();
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Start Time",
+      accessor: "startTime",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "End Time",
+      accessor: "endTime",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+      : []),
+  ];
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
@@ -127,9 +131,9 @@ const EventListPage = async ({
   //  ROLE WHERE CONDITION
 
   const roleConditions = {
-    teacher: { lessons: { some: { teacherId: currentUserId } } },
-    student: { students: { some: { id: currentUserId } } },
-    parent: { students: { some: { parentId: currentUserId } } },
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
   };
 
   if (role !== "admin") {

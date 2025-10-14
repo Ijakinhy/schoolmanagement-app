@@ -33,7 +33,6 @@ const AssignmentForm = ({
       lessonId: data?.lessonId,
     }
   });
-  console.log(data, relatedData);
 
   const [state, formAction] = useFormState(createUpdateAssignment, {
     success: false,

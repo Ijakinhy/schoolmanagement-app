@@ -82,50 +82,13 @@ type Results = {
   startTime: Date;
 };
 
-const { role, currentUserId } = await getCurrentUserAndRole();
 
 
-const columns = [
-  {
-    header: "title",
-    accessor: "title",
-  },
-  {
-    header: "Student",
-    accessor: "student",
-  },
-  {
-    header: "Score",
-    accessor: "score",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin" || role === "teacher"
-    ? [
-      {
-        header: "Actions",
-        accessor: "action",
-      },
-    ]
-    : []),
-];
 
-const renderRow = (item: ResultList) => {
-  // console.log({ item })
+
+const renderRow = async (item: ResultList) => {
+  const { role, currentUserId } = await getCurrentUserAndRole();
+
   return (
     <tr
       key={item.id}
@@ -166,6 +129,45 @@ const ResultListPage = async ({
   searchParams: { [key: string]: string };
 }) => {
   const { page, ...queryPerams } = searchParams;
+  const { role, currentUserId } = await getCurrentUserAndRole();
+  const columns = [
+    {
+      header: "title",
+      accessor: "title",
+    },
+    {
+      header: "Student",
+      accessor: "student",
+    },
+    {
+      header: "Score",
+      accessor: "score",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" || role === "teacher"
+      ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+      : []),
+  ];
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
@@ -253,21 +255,21 @@ const ResultListPage = async ({
 
   switch (role) {
     case "student":
-      query.studentId = currentUserId;
+      query.studentId = currentUserId!;
       break;
     case "teacher":
       query.OR = [
         {
           assignment: {
             lesson: {
-              teacherId: currentUserId,
+              teacherId: currentUserId!,
             },
           },
         },
         {
           exam: {
             lesson: {
-              teacherId: currentUserId,
+              teacherId: currentUserId!,
             },
           },
         },
@@ -276,7 +278,7 @@ const ResultListPage = async ({
     case "parent":
       query.student = {
         parent: {
-          id: currentUserId,
+          id: currentUserId!,
         },
       };
       break;

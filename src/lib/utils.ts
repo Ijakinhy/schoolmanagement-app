@@ -1,11 +1,26 @@
-import { currentUser } from "@clerk/nextjs/server";
+// import { auth } from "./auth";
+import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
+
+
+// export const getCurrentUserAndRole = async () => {
+//   const res = await auth.api.getSession({
+//     headers: headers()
+//   })
+//   return {
+//     role: res?.user.role,
+//     currentUserId: res?.user.id
+//   }
+// }
 
 
 export async function getCurrentUserAndRole() {
-  const user = await currentUser();
+  // const user = await currentUser();
+  const { userId, sessionClaims } = await auth();
+  // console.log({ userROle: (sessionClaims?.metadata as { role?: string }).role, userId });
   return {
-    currentUserId: user?.id ?? undefined,
-    role: (user?.publicMetadata as { role?: string })?.role ?? "guest",
+    currentUserId: userId,
+    role: (sessionClaims?.metadata as { role?: string }).role,
   };
 }
 export const currentworkWeek = () => {

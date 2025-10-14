@@ -15,61 +15,33 @@ type ClassList = Prisma.ClassGetPayload<{
   };
 }>;
 
-const { role, currentUserId } = await getCurrentUserAndRole();
 
-const columns = [
-  {
-    header: "Class Name",
-    accessor: "name",
-  },
-  {
-    header: "Capacity",
-    accessor: "capacity",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Grade",
-    accessor: "grade",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Supervisor",
-    accessor: "supervisor",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-      {
-        header: "Actions",
-        accessor: "action",
-      },
-    ]
-    : []),
-];
-
-const renderRow = (item: ClassList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.name}</td>
-    <td className="hidden md:table-cell">{item.capacity}</td>
-    <td className="hidden md:table-cell">{item.grade.level}</td>
-    <td className="hidden md:table-cell">
-      {item.supervisor.name + " " + item.supervisor.surname}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-            <FormContainer table="class" type="update" data={item} />
-            <FormContainer table="class" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
+const renderRow = async (item: ClassList) => {
+  const { role } = await getCurrentUserAndRole();
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td className="hidden md:table-cell">{item.capacity}</td>
+      <td className="hidden md:table-cell">{item.grade.level}</td>
+      <td className="hidden md:table-cell">
+        {item.supervisor.name + " " + item.supervisor.surname}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {role === "admin" && (
+            <>
+              <FormContainer table="class" type="update" data={item} />
+              <FormContainer table="class" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+};
 const ClassListPage = async ({
   params,
   searchParams,
@@ -80,6 +52,37 @@ const ClassListPage = async ({
   const { page, ...queryPerams } = searchParams;
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
+  const { role, currentUserId } = await getCurrentUserAndRole();
+
+  const columns = [
+    {
+      header: "Class Name",
+      accessor: "name",
+    },
+    {
+      header: "Capacity",
+      accessor: "capacity",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Grade",
+      accessor: "grade",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Supervisor",
+      accessor: "supervisor",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+      : []),
+  ];
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
 

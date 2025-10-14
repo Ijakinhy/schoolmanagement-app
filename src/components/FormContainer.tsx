@@ -112,7 +112,7 @@ const FormContainer = async ({
                 const examLessons = await prisma.lesson.findMany({
                     select: { id: true, name: true },
                     where: {
-                        ...(role === "teacher" ? { teacher: { id: currentUserId } } : {})
+                        ...(role === "teacher" ? { teacher: { id: currentUserId! } } : {})
                     }
                 })
                 const results = await prisma.result.findMany({
@@ -160,15 +160,15 @@ const FormContainer = async ({
                 const attendanceLessons = await prisma.lesson.findMany({
                     select: { id: true, name: true },
                     where: {
-                        ...(role === "teacher" ? { teacher: { id: currentUserId } } : {})
+                        ...(role === "teacher" ? { teacher: { id: currentUserId! } } : {})
                     }
                 })
                 const allStudents = await prisma.student.findMany({
                     select: { id: true, name: true, surname: true },
                     where: role === "teacher" ? {
                         OR: [
-                            { class: { supervisorId: currentUserId } },
-                            { class: { lessons: { some: { teacher: { id: currentUserId } } } } }
+                            { class: { supervisorId: currentUserId! } },
+                            { class: { lessons: { some: { teacher: { id: currentUserId! } } } } }
                         ]
                     } : {},
                 })
