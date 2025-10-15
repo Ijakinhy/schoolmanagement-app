@@ -17,32 +17,11 @@ type AnnouncementList = Prisma.AnnouncementGetPayload<{
     };
   };
 }>;
-const { role, currentUserId } = await getCurrentUserAndRole();
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-      {
-        header: "Actions",
-        accessor: "action",
-      },
-    ]
-    : []),
-];
+
 
 const renderRow = async (item: AnnouncementList) => {
+  const { role, currentUserId } = await getCurrentUserAndRole();
+
   return (
     <tr
       key={item.id}
@@ -77,6 +56,31 @@ const AnnouncementListPage = async ({
 }) => {
   const { page, ...queryPerams } = searchParams;
   const p: number = typeof page === "string" ? parseInt(page) : 1;
+  const { role, currentUserId } = await getCurrentUserAndRole();
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+      : []),
+  ];
+
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
 
@@ -99,18 +103,16 @@ const AnnouncementListPage = async ({
 
   // //  WHERE  CLAUSE BASED ON  THE ROLE
 
-  const roleConditions = {
-    teacher: { lessons: { some: { teacherId: currentUserId } } },
-    student: { students: { some: { id: currentUserId } } },
-    parent: { students: { some: { parentId: currentUserId } } },
+  const roleConditions: Record<string, Prisma.ClassWhereInput> = {
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
   };
 
-  if (role !== "admin") {
-    query.OR = [
-      { classId: null },
-      { class: roleConditions[role as keyof typeof roleConditions] || {} },
-    ];
-  }
+  query.OR = [
+    { classId: null },
+    { class: roleConditions[role as keyof typeof roleConditions] || {} },
+  ];
 
   // GET DATA
   const [announcements, count] = await prisma.$transaction([

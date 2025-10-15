@@ -20,38 +20,13 @@ type AssignmentList = Prisma.AssignmentGetPayload<{
   };
 
 }>;
-const { currentUserId, role } = await getCurrentUserAndRole();
 
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  }, {
-    header: "Subject Name",
-    accessor: "name",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Due Date",
-    accessor: "dueDate",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin" || role === "teacher" ? [{
-    header: "Actions",
-    accessor: "action",
-  }] : []),
-];
+
 
 const renderRow = async (item: AssignmentList) => {
+
+  const { currentUserId, role } = await getCurrentUserAndRole();
 
   return (
     <tr
@@ -95,6 +70,34 @@ const AssignmentListPage = async ({
   const { page, ...queryPerams } = searchParams;
 
   const p: number = typeof page === "string" ? parseInt(page) : 1;
+  const { currentUserId, role } = await getCurrentUserAndRole();
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+    }, {
+      header: "Subject Name",
+      accessor: "name",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Due Date",
+      accessor: "dueDate",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" || role === "teacher" ? [{
+      header: "Actions",
+      accessor: "action",
+    }] : []),
+  ];
 
   // WHERE CLAUSE BASED ON  URLS PARAMS
 
@@ -144,14 +147,14 @@ const AssignmentListPage = async ({
 
   switch (role) {
     case "teacher":
-      query.lesson.teacherId = currentUserId
+      query.lesson.teacherId = currentUserId!
       break;
     case "student":
       query.lesson = {
         class: {
           students: {
             some: {
-              id: currentUserId,
+              id: currentUserId!,
             },
           },
         },
@@ -162,7 +165,7 @@ const AssignmentListPage = async ({
         class: {
           students: {
             some: {
-              parentId: currentUserId,
+              parentId: currentUserId!,
             },
           },
         },

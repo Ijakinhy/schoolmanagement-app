@@ -12,48 +12,31 @@ import Image from "next/image";
 type SubjectList = Subject & {
   teachers: Teacher[];
 };
-const { role } = await getCurrentUserAndRole();
-const columns = [
-  {
-    header: "Subject Name",
-    accessor: "name",
-  },
-  {
-    header: "Teachers",
-    accessor: "teachers",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-      {
-        header: "Actions",
-        accessor: "action",
-      },
-    ]
-    : []),
-];
 
-const renderRow = (item: SubjectList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.name}</td>
-    <td className="hidden md:table-cell">
-      {item.teachers.map((subject) => subject.name).join(", ")}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-            <FormContainer table="subject" type="update" data={item} />
-            <FormContainer table="subject" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
+const renderRow = async (item: SubjectList) => {
+  const { role } = await getCurrentUserAndRole();
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-uiPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td className="hidden md:table-cell">
+        {item.teachers.map((subject) => subject.name).join(", ")}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {role === "admin" && (
+            <>
+              <FormContainer table="subject" type="update" data={item} />
+              <FormContainer table="subject" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+};
 const SubjectListPage = async ({
   params,
   searchParams,
@@ -61,8 +44,28 @@ const SubjectListPage = async ({
   params: { slug: string };
   searchParams: { [key: string]: string };
 }) => {
-  const { page, ...queryPerams } = searchParams;
+  const { role } = await getCurrentUserAndRole();
 
+  const { page, ...queryPerams } = searchParams;
+  const columns = [
+    {
+      header: "Subject Name",
+      accessor: "name",
+    },
+    {
+      header: "Teachers",
+      accessor: "teachers",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+      : []),
+  ];
   const p: number = typeof page === "string" ? parseInt(page) : 1;
 
   // WHERE CLAUSE BASED ON  URLS PARAMS

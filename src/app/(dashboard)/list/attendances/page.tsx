@@ -20,43 +20,10 @@ type AttendanceList = Prisma.AttendanceGetPayload<{
         };
     };
 }>;
-const { role, currentUserId } = await getCurrentUserAndRole();
 
-const columns = [
-    {
-        header: "student Name",
-        accessor: "name",
-    },
-    {
-        header: "Subject Name",
-        accessor: "subject",
-    },
-    {
-        header: "Class",
-        accessor: "class",
-    },
-    {
-        header: "Teacher",
-        accessor: "teacher",
-        className: "hidden md:table-cell",
-    },
-    {
-        header: "Date",
-        accessor: "dueDate",
-        className: "hidden md:table-cell",
-    },
-    {
-        header: "Present",
-        accessor: "present",
-        className: "hidden md:table-cell",
-    },
-    ...(role === "admin" || role === "teacher" ? [{
-        header: "Actions",
-        accessor: "action",
-    }] : []),
-];
 
 const renderRow = async (item: AttendanceList) => {
+    const { role, currentUserId } = await getCurrentUserAndRole();
 
 
     return (
@@ -100,7 +67,41 @@ const AttendanceListPage = async ({
     searchParams: { [key: string]: string };
 }) => {
     const { page, ...queryPerams } = searchParams;
+    const { role, currentUserId } = await getCurrentUserAndRole();
 
+    const columns = [
+        {
+            header: "student Name",
+            accessor: "name",
+        },
+        {
+            header: "Subject Name",
+            accessor: "subject",
+        },
+        {
+            header: "Class",
+            accessor: "class",
+        },
+        {
+            header: "Teacher",
+            accessor: "teacher",
+            className: "hidden md:table-cell",
+        },
+        {
+            header: "Date",
+            accessor: "dueDate",
+            className: "hidden md:table-cell",
+        },
+        {
+            header: "Present",
+            accessor: "present",
+            className: "hidden md:table-cell",
+        },
+        ...(role === "admin" || role === "teacher" ? [{
+            header: "Actions",
+            accessor: "action",
+        }] : []),
+    ];
     const p: number = typeof page === "string" ? parseInt(page) : 1;
 
     // WHERE CLAUSE BASED ON  URLS PARAMS
@@ -151,14 +152,14 @@ const AttendanceListPage = async ({
 
     switch (role) {
         case "teacher":
-            query.lesson.teacherId = currentUserId
+            query.lesson.teacherId = currentUserId!
             break;
         case "student":
             query.lesson = {
                 class: {
                     students: {
                         some: {
-                            id: currentUserId,
+                            id: currentUserId!,
                         },
                     },
                 },
@@ -169,7 +170,7 @@ const AttendanceListPage = async ({
                 class: {
                     students: {
                         some: {
-                            parentId: currentUserId,
+                            parentId: currentUserId!,
                         },
                     },
                 },
