@@ -13,7 +13,8 @@
     "db:reset": "npx prisma migrate reset",
     "db:pull": "npx prisma db pull",
     "db:push": "npx prisma db push",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx scripts/seed.ts"
