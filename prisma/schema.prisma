@@ -1,11 +1,10 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -26,14 +25,14 @@ model Student {
   sex        UserSex
   createdAt  DateTime     @default(now())
   parentId   String
-  parent     Parent       @relation(fields: [parentId], references: [id])
   classId    Int
-  class      Class        @relation(fields: [classId], references: [id])
   gradeId    Int
-  grade      Grades       @relation(fields: [gradeId], references: [id])
+  birthday   DateTime
   attendance Attendance[]
   results    Result[]
-  birthday   DateTime
+  class      Class        @relation(fields: [classId], references: [id])
+  grade      Grades       @relation(fields: [gradeId], references: [id])
+  parent     Parent       @relation(fields: [parentId], references: [id])
 }
 
 model Parent {
@@ -59,17 +58,17 @@ model Teacher {
   image     String?
   sex       UserSex
   createdAt DateTime  @default(now())
-  subjects  Subject[]
-  lessons   Lesson[]
-  classes   Class[]
   birthday  DateTime
+  classes   Class[]
+  lessons   Lesson[]
+  subjects  Subject[] @relation("SubjectToTeacher")
 }
 
 model Subject {
   id       Int       @id @default(autoincrement())
   name     String
-  teachers Teacher[]
   lessons  Lesson[]
+  teachers Teacher[] @relation("SubjectToTeacher")
 }
 
 model Lesson {
@@ -79,28 +78,28 @@ model Lesson {
   start       DateTime
   end         DateTime
   subjectId   Int
-  subject     Subject      @relation(fields: [subjectId], references: [id])
   classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
   teacherId   String
-  teacher     Teacher      @relation(fields: [teacherId], references: [id])
-  Exams       Exam[]
   Assignments Assignment[]
   Attendance  Attendance[]
+  Exams       Exam[]
+  class       Class        @relation(fields: [classId], references: [id])
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  teacher     Teacher      @relation(fields: [teacherId], references: [id])
 }
 
 model Class {
   id            Int            @id @default(autoincrement())
   name          String         @unique
   capacity      Int
-  lessons       Lesson[]
   supervisorId  String
-  supervisor    Teacher        @relation(fields: [supervisorId], references: [id])
-  students      Student[]
   gradeId       Int
-  grade         Grades         @relation(fields: [gradeId], references: [id])
   announcements Announcement[]
+  grade         Grades         @relation(fields: [gradeId], references: [id])
+  supervisor    Teacher        @relation(fields: [supervisorId], references: [id])
   events        Event[]
+  lessons       Lesson[]
+  students      Student[]
 }
 
 model Grades {
@@ -134,10 +133,10 @@ model Result {
   id           Int         @id @default(autoincrement())
   score        Int
   assignmentId Int?
-  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
   examId       Int?
-  exam         Exam?       @relation(fields: [examId], references: [id])
   studentId    String
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
+  exam         Exam?       @relation(fields: [examId], references: [id])
   student      Student     @relation(fields: [studentId], references: [id])
 }
 
@@ -146,8 +145,8 @@ model Attendance {
   date      DateTime
   present   Boolean
   lessonId  Int
-  lesson    Lesson   @relation(fields: [lessonId], references: [id])
   studentId String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
   student   Student  @relation(fields: [studentId], references: [id])
 }
 
@@ -156,8 +155,8 @@ model Announcement {
   title       String
   description String
   classId     Int?
-  class       Class?   @relation(fields: [classId], references: [id])
   date        DateTime
+  class       Class?   @relation(fields: [classId], references: [id])
 }
 
 model Event {
@@ -165,9 +164,72 @@ model Event {
   title       String
   description String
   classId     Int?
-  class       Class?   @relation(fields: [classId], references: [id])
   startTime   DateTime
   endTime     DateTime
+  class       Class?   @relation(fields: [classId], references: [id])
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  role          String?
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("user")
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
 }
 
 enum UserSex {
@@ -183,69 +245,4 @@ enum Day {
   Thursday
   Friday
   Saturday
-}
-
-model User {
-  id            String    @id
-  name          String    @db.Text
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  role          String?   @db.Text
-  banned        Boolean?  @default(false)
-  banReason     String?   @db.Text
-  banExpires    DateTime?
-  sessions      Session[]
-  accounts      Account[]
-
-  @@unique([email])
-  @@map("user")
-}
-
-model Session {
-  id             String   @id
-  expiresAt      DateTime
-  token          String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  ipAddress      String?  @db.Text
-  userAgent      String?  @db.Text
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  impersonatedBy String?  @db.Text
-
-  @@unique([token])
-  @@map("session")
-}
-
-model Account {
-  id                    String    @id
-  accountId             String    @db.Text
-  providerId            String    @db.Text
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?   @db.Text
-  refreshToken          String?   @db.Text
-  idToken               String?   @db.Text
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?   @db.Text
-  password              String?   @db.Text
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@map("account")
-}
-
-model Verification {
-  id         String   @id
-  identifier String   @db.Text
-  value      String   @db.Text
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
-
-  @@map("verification")
 }
