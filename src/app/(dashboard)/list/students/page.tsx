@@ -2,9 +2,6 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import Image from "next/image";
-import Link from "next/link";
-import { ITEM_PER_PAGE, PAGE } from "@/lib/setting";
 import {
   Attendance,
   Class,
@@ -15,9 +12,10 @@ import {
   Student,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/setting";
 import { getCurrentUserAndRole } from "@/lib/utils";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import Image from "next/image";
+import Link from "next/link";
 
 type StudentList = Student & {
   grades: Grades[];

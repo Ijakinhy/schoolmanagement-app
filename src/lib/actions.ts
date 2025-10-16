@@ -1,11 +1,7 @@
 "use server"
-import { UseFormResetField } from "react-hook-form"
+import { clerkClient } from "@clerk/nextjs/server"
 import { AnnouncementSchema, AssignmentSchema, AttendanceSchema, ClassSchema, EventSchema, ExamSchema, LessonSchema, ParentSchema, ResultSchema, StudentSchema, SubjectSchema, TeacherSchema } from "./datasource"
 import { prisma } from "./prisma"
-import { clerkClient } from "@clerk/nextjs/server"
-import { auth } from "./auth"
-import { resolve } from "path/win32"
-import { custom } from "better-auth"
 
 export const createSubject = async (currentState: { success: boolean, error: boolean }, data: SubjectSchema) => {
     try {
@@ -293,17 +289,6 @@ export const createUpdateStudent = async (currentState: { success: boolean, erro
                 skipPasswordChecks: true,
                 skipPasswordRequirement: true
             });
-            // const res = await auth.api.createUser({
-            //     body: {
-            //         email: data.email!,
-            //         password: data.password,
-            //         name: data.name,
-            //         data: {
-            //             role: "student",
-            //         }
-            //     }
-            // })
-
 
             await prisma.student.create({
                 data: {
